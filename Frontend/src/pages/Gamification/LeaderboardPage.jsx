@@ -72,6 +72,8 @@ const LeaderboardPage = () => {
   }, [user, timeFilter, categoryFilter, regionFilter]);
 
   const getRoleDisplayName = (role) => {
+    if (!role) return 'User'; // Handle undefined or null roles
+    
     const roleNames = {
       'marine_biologist': 'Marine Biologist',
       'fisherman': 'Fisherman',

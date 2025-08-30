@@ -22,6 +22,14 @@
 .env.production.local
 .env.production
 .env.development
+/Frontend/.env
+/Frontend/.env.local
+/Frontend/.env.development
+/Frontend/.env.production
+/Backend/.env
+/Backend/.env.local
+/Backend/.env.development
+/Backend/.env.production
 
 # Logs
 npm-debug.log*
@@ -47,3 +55,10 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 $RECYCLE.BIN/
+
+# Test files
+/Backend/create-test-user.js
+/Backend/test-*.js
+/Backend/seedData.js
+/Frontend/cypress/screenshots/
+/Frontend/cypress/videos/

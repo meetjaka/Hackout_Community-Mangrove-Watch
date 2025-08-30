@@ -63,6 +63,30 @@ router.post('/register', [
       roleSpecificInfo: req.body.roleSpecificInfo
     });
     
+    // Validate the role is allowed
+    const allowedRoles = [
+      'super_admin',
+      'ngo_admin',
+      'government_officer',
+      'researcher',
+      'fisherman',
+      'coastal_resident',
+      'citizen_scientist',
+      'local_guide',
+      'public_visitor'
+    ];
+    
+    if (!allowedRoles.includes(role)) {
+      console.error(`Invalid role: ${role}`);
+      return res.status(400).json({
+        success: false,
+        message: `Invalid role: ${role}. Allowed roles are: ${allowedRoles.join(', ')}`
+      });
+    }
+    
+    // Ensure roleSpecificInfo is an object
+    const sanitizedRoleSpecificInfo = req.body.roleSpecificInfo || {};
+    
     // Create new user with default location if not provided
     const user = new User({
       firstName,
@@ -79,7 +103,7 @@ router.post('/register', [
       address,
       organization,
       bio,
-      roleSpecificInfo: req.body.roleSpecificInfo
+      roleSpecificInfo: sanitizedRoleSpecificInfo
     });
 
     // Set default permissions based on role
@@ -93,7 +117,16 @@ router.post('/register', [
       case 'researcher':
         user.permissions = ['create_report', 'view_reports', 'view_dashboard', 'export_data'];
         break;
-      default: // citizen
+      case 'citizen_scientist':
+        user.permissions = ['create_report', 'edit_report', 'view_reports', 'view_dashboard'];
+        break;
+      case 'local_guide':
+        user.permissions = ['create_report', 'edit_report', 'view_reports'];
+        break;
+      case 'public_visitor':
+        user.permissions = ['create_report', 'view_reports'];
+        break;
+      default: // Default for fisherman, coastal_resident, etc.
         user.permissions = ['create_report', 'edit_report', 'view_reports'];
     }
 
@@ -139,9 +172,25 @@ router.post('/register', [
 
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({
+    let message = 'Server error during registration';
+    let statusCode = 500;
+    
+    // Handle validation errors from Mongoose
+    if (error.name === 'ValidationError') {
+      message = Object.values(error.errors).map(err => err.message).join(', ');
+      statusCode = 400;
+    }
+    
+    // Handle duplicate key errors (email/phone already exists)
+    if (error.code === 11000) {
+      message = 'Email or phone number already registered';
+      statusCode = 409;
+    }
+    
+    res.status(statusCode).json({
       success: false,
-      message: 'Server error during registration'
+      message,
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });

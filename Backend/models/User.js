@@ -58,13 +58,40 @@ const userSchema = new mongoose.Schema({
   },
   // Additional role-specific information
   roleSpecificInfo: {
-    fishingLicenseNo: String,         // For fishermen
-    organizationName: String,         // For NGO admins
-    governmentId: String,            // For government officers
-    researchInstitution: String,     // For researchers
-    localArea: String,               // For coastal residents and local guides
-    expertise: [String],             // Areas of expertise
-    yearsOfExperience: Number        // Experience in the field
+    // For fishermen
+    boatNumber: String,
+    fishingArea: String,
+    
+    // For coastal residents
+    area: String,
+    
+    // For citizen scientists
+    expertise: String,
+    
+    // For NGO admins
+    ngoName: String,
+    designation: String,
+    
+    // For government officers
+    department: String,
+    jurisdiction: String,
+    
+    // For researchers
+    institution: String,
+    researchArea: String,
+    
+    // For local guides
+    experienceYears: Number,
+    // area is already defined for coastal residents
+    expertise: String, // Will store comma-separated expertise areas
+    
+    // Legacy fields (keeping for backward compatibility)
+    fishingLicenseNo: String,         
+    organizationName: String,         
+    governmentId: String,            
+    researchInstitution: String,     
+    localArea: String,               
+    yearsOfExperience: Number        
   },
   permissions: [{
     type: String,
