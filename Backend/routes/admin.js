@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const Report = require('../models/Report');
+const Community = require('../models/Community'); // Added Community model
 const { auth, authorize, hasPermission } = require('../middleware/auth');
 
 const router = express.Router();
@@ -632,6 +633,637 @@ router.get('/system-status', [
     res.status(500).json({
       success: false,
       message: 'Server error while fetching system status'
+    });
+  }
+});
+
+// Community Content Management Routes
+// @route   GET /api/admin/community/content
+// @desc    Get all community content for management
+// @access  Admin only
+router.get('/community/content', auth, async (req, res) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.'
+      });
+    }
+
+    const community = await Community.findOne({ isActive: true });
+    if (!community) {
+      return res.status(404).json({
+        success: false,
+        message: 'Community data not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        resources: community.resources,
+        guidelines: community.guidelines,
+        events: community.events,
+        partners: community.partners,
+        stats: {
+          totalResources: community.resources.length,
+          totalGuidelines: community.guidelines.length,
+          totalEvents: community.events.length,
+          totalPartners: community.partners.length
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Admin community content error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching community content'
+    });
+  }
+});
+
+// @route   POST /api/admin/community/resources
+// @desc    Add new educational resource
+// @access  Admin only
+router.post('/community/resources', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.'
+      });
+    }
+
+    const {
+      title,
+      description,
+      category,
+      type,
+      url,
+      tags,
+      difficulty,
+      estimatedTime,
+      language
+    } = req.body;
+
+    // Validate required fields
+    if (!title || !description || !category || !type) {
+      return res.status(400).json({
+        success: false,
+        message: 'Title, description, category, and type are required'
+      });
+    }
+
+    const community = await Community.findOne({ isActive: true });
+    if (!community) {
+      return res.status(404).json({
+        success: false,
+        message: 'Community data not found'
+      });
+    }
+
+    const newResource = {
+      title,
+      description,
+      category,
+      type,
+      url: url || '#',
+      tags: tags || [],
+      difficulty: difficulty || 'beginner',
+      estimatedTime: estimatedTime || '15 minutes',
+      language: language || 'en',
+      isActive: true,
+      createdAt: new Date()
+    };
+
+    community.resources.push(newResource);
+    await community.save();
+
+    res.json({
+      success: true,
+      message: 'Educational resource added successfully',
+      data: newResource
+    });
+  } catch (error) {
+    console.error('Admin add resource error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while adding resource'
+    });
+  }
+});
+
+// @route   PUT /api/admin/community/resources/:id
+// @desc    Update educational resource
+// @access  Admin only
+router.put('/community/resources/:id', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.'
+      });
+    }
+
+    const { id } = req.params;
+    const updateData = req.body;
+
+    const community = await Community.findOne({ isActive: true });
+    if (!community) {
+      return res.status(404).json({
+        success: false,
+        message: 'Community data not found'
+      });
+    }
+
+    const resourceIndex = community.resources.findIndex(r => r._id.toString() === id);
+    if (resourceIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: 'Resource not found'
+      });
+    }
+
+    // Update resource
+    community.resources[resourceIndex] = {
+      ...community.resources[resourceIndex],
+      ...updateData,
+      updatedAt: new Date()
+    };
+
+    await community.save();
+
+    res.json({
+      success: true,
+      message: 'Resource updated successfully',
+      data: community.resources[resourceIndex]
+    });
+  } catch (error) {
+    console.error('Admin update resource error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating resource'
+    });
+  }
+});
+
+// @route   DELETE /api/admin/community/resources/:id
+// @desc    Delete educational resource
+// @access  Admin only
+router.delete('/community/resources/:id', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.'
+      });
+    }
+
+    const { id } = req.params;
+
+    const community = await Community.findOne({ isActive: true });
+    if (!community) {
+      return res.status(404).json({
+        success: false,
+        message: 'Community data not found'
+      });
+    }
+
+    const resourceIndex = community.resources.findIndex(r => r._id.toString() === id);
+    if (resourceIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: 'Resource not found'
+      });
+    }
+
+    // Soft delete by setting isActive to false
+    community.resources[resourceIndex].isActive = false;
+    await community.save();
+
+    res.json({
+      success: true,
+      message: 'Resource deleted successfully'
+    });
+  } catch (error) {
+    console.error('Admin delete resource error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while deleting resource'
+    });
+  }
+});
+
+// @route   POST /api/admin/community/guidelines
+// @desc    Add new community guideline
+// @access  Admin only
+router.post('/community/guidelines', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.'
+      });
+    }
+
+    const { title, description, order } = req.body;
+
+    if (!title || !description) {
+      return res.status(400).json({
+        success: false,
+        message: 'Title and description are required'
+      });
+    }
+
+    const community = await Community.findOne({ isActive: true });
+    if (!community) {
+      return res.status(404).json({
+        success: false,
+        message: 'Community data not found'
+      });
+    }
+
+    // Auto-assign order if not provided
+    const newOrder = order || Math.max(...community.guidelines.map(g => g.order), 0) + 1;
+
+    const newGuideline = {
+      title,
+      description,
+      order: newOrder,
+      isActive: true
+    };
+
+    community.guidelines.push(newGuideline);
+    await community.save();
+
+    res.json({
+      success: true,
+      message: 'Community guideline added successfully',
+      data: newGuideline
+    });
+  } catch (error) {
+    console.error('Admin add guideline error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while adding guideline'
+    });
+  }
+});
+
+// @route   PUT /api/admin/community/guidelines/:id
+// @desc    Update community guideline
+// @access  Admin only
+router.put('/community/guidelines/:id', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.'
+      });
+    }
+
+    const { id } = req.params;
+    const updateData = req.body;
+
+    const community = await Community.findOne({ isActive: true });
+    if (!community) {
+      return res.status(404).json({
+        success: false,
+        message: 'Community data not found'
+      });
+    }
+
+    const guidelineIndex = community.guidelines.findIndex(g => g._id.toString() === id);
+    if (guidelineIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: 'Guideline not found'
+      });
+    }
+
+    // Update guideline
+    community.guidelines[guidelineIndex] = {
+      ...community.guidelines[guidelineIndex],
+      ...updateData
+    };
+
+    await community.save();
+
+    res.json({
+      success: true,
+      message: 'Guideline updated successfully',
+      data: community.guidelines[guidelineIndex]
+    });
+  } catch (error) {
+    console.error('Admin update guideline error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating guideline'
+    });
+  }
+});
+
+// @route   DELETE /api/admin/community/guidelines/:id
+// @desc    Delete community guideline
+// @access  Admin only
+router.delete('/community/guidelines/:id', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.'
+      });
+    }
+
+    const { id } = req.params;
+
+    const community = await Community.findOne({ isActive: true });
+    if (!community) {
+      return res.status(404).json({
+        success: false,
+        message: 'Community data not found'
+      });
+    }
+
+    const guidelineIndex = community.guidelines.findIndex(g => g._id.toString() === id);
+    if (guidelineIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: 'Guideline not found'
+      });
+    }
+
+    // Soft delete
+    community.guidelines[guidelineIndex].isActive = false;
+    await community.save();
+
+    res.json({
+      success: true,
+      message: 'Guideline deleted successfully'
+    });
+  } catch (error) {
+    console.error('Admin delete guideline error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while deleting guideline'
+    });
+  }
+});
+
+// @route   GET /api/admin/community/analytics
+// @desc    Get community analytics and insights
+// @access  Admin only
+router.get('/community/analytics', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.'
+      });
+    }
+
+    const community = await Community.findOne({ isActive: true });
+    if (!community) {
+      return res.status(404).json({
+        success: false,
+        message: 'Community data not found'
+      });
+    }
+
+    // Calculate analytics
+    const analytics = {
+      resources: {
+        total: community.resources.length,
+        active: community.resources.filter(r => r.isActive).length,
+        byCategory: community.resources.reduce((acc, r) => {
+          acc[r.category] = (acc[r.category] || 0) + 1;
+          return acc;
+        }, {}),
+        byDifficulty: community.resources.reduce((acc, r) => {
+          acc[r.difficulty] = (acc[r.difficulty] || 0) + 1;
+          return acc;
+        }, {}),
+        byLanguage: community.resources.reduce((acc, r) => {
+          acc[r.language] = (acc[r.language] || 0) + 1;
+          return acc;
+        }, {})
+      },
+      guidelines: {
+        total: community.guidelines.length,
+        active: community.guidelines.filter(g => g.isActive).length
+      },
+      events: {
+        total: community.events.length,
+        active: community.events.filter(e => e.isActive).length,
+        upcoming: community.events.filter(e => e.isActive && e.date > new Date()).length
+      },
+      partners: {
+        total: community.partners.length,
+        active: community.partners.filter(p => p.isActive).length,
+        byType: community.partners.reduce((acc, p) => {
+          acc[p.type] = (acc[p.type] || 0) + 1;
+          return acc;
+        }, {})
+      },
+      community: {
+        totalMembers: community.totalMembers,
+        activeMembers: community.activeMembers,
+        totalReports: community.totalReports,
+        totalMangroveAreas: community.totalMangroveAreas
+      }
+    };
+
+    res.json({
+      success: true,
+      data: analytics
+    });
+  } catch (error) {
+    console.error('Admin community analytics error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching analytics'
+    });
+  }
+});
+
+// @route   POST /api/admin/community
+// @desc    Create a new community
+// @access  Admin only
+router.post('/community', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.'
+      });
+    }
+
+    const {
+      name,
+      description,
+      location,
+      focusAreas,
+      contactInfo
+    } = req.body;
+
+    // Validate required fields
+    if (!name || !description) {
+      return res.status(400).json({
+        success: false,
+        message: 'Name and description are required'
+      });
+    }
+
+    // Check if community already exists
+    const existingCommunity = await Community.findOne({ name: name });
+    if (existingCommunity) {
+      return res.status(400).json({
+        success: false,
+        message: 'Community with this name already exists'
+      });
+    }
+
+    // Create new community
+    const newCommunity = new Community({
+      name,
+      description,
+      location: location || {},
+      focusAreas: focusAreas || [],
+      contactInfo: contactInfo || {},
+      isActive: true,
+      resources: [],
+      guidelines: [],
+      events: [],
+      partners: [],
+      totalMembers: 0,
+      activeMembers: 0,
+      totalReports: 0,
+      totalMangroveAreas: 0
+    });
+
+    await newCommunity.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Community created successfully',
+      data: newCommunity
+    });
+  } catch (error) {
+    console.error('Admin create community error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while creating community'
+    });
+  }
+});
+
+// @route   PUT /api/admin/community/:id
+// @desc    Update community details
+// @access  Admin only
+router.put('/community/:id', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.'
+      });
+    }
+
+    const { id } = req.params;
+    const updateData = req.body;
+
+    const community = await Community.findById(id);
+    if (!community) {
+      return res.status(404).json({
+        success: false,
+        message: 'Community not found'
+      });
+    }
+
+    // Update community
+    Object.assign(community, updateData);
+    await community.save();
+
+    res.json({
+      success: true,
+      message: 'Community updated successfully',
+      data: community
+    });
+  } catch (error) {
+    console.error('Admin update community error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while updating community'
+    });
+  }
+});
+
+// @route   DELETE /api/admin/community/:id
+// @desc    Delete community (soft delete)
+// @access  Admin only
+router.delete('/community/:id', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.'
+      });
+    }
+
+    const { id } = req.params;
+
+    const community = await Community.findById(id);
+    if (!community) {
+      return res.status(404).json({
+        success: false,
+        message: 'Community not found'
+      });
+    }
+
+    // Soft delete
+    community.isActive = false;
+    await community.save();
+
+    res.json({
+      success: true,
+      message: 'Community deleted successfully'
+    });
+  } catch (error) {
+    console.error('Admin delete community error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while deleting community'
+    });
+  }
+});
+
+// @route   GET /api/admin/community/list
+// @desc    Get list of all communities
+// @access  Admin only
+router.get('/community/list', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin privileges required.'
+      });
+    }
+
+    const communities = await Community.find().select('name description location isActive createdAt totalMembers totalReports');
+
+    res.json({
+      success: true,
+      data: {
+        communities,
+        totalCommunities: communities.length
+      }
+    });
+  } catch (error) {
+    console.error('Admin list communities error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while fetching communities'
     });
   }
 });

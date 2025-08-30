@@ -33,11 +33,14 @@ api.interceptors.response.use(
         "⚠️ Rate limit exceeded. Please wait before making more requests."
       );
 
-      // Show user-friendly message
+      // Show user-friendly message with retry information
       if (typeof window !== "undefined" && window.toast) {
-        window.toast.error(
-          "Too many requests. Please wait a moment and try again."
-        );
+        const retryAfter = error.response.headers["retry-after"];
+        const message = retryAfter 
+          ? `Too many requests. Please wait ${retryAfter} seconds before trying again.`
+          : "Too many requests. Please wait a moment and try again.";
+        
+        window.toast.error(message);
       }
 
       // Add retry-after header support if available
@@ -47,6 +50,14 @@ api.interceptors.response.use(
           `⏰ Server suggests waiting ${retryAfter} seconds before retrying.`
         );
       }
+
+      // Log rate limit headers for debugging
+      console.log("Rate limit headers:", {
+        "X-RateLimit-Limit": error.response.headers["x-ratelimit-limit"],
+        "X-RateLimit-Remaining": error.response.headers["x-ratelimit-remaining"],
+        "X-RateLimit-Reset": error.response.headers["x-ratelimit-reset"],
+        "Retry-After": error.response.headers["retry-after"]
+      });
     }
 
     // Handle authentication errors
@@ -164,11 +175,27 @@ export const gamificationAPI = {
 export const communityAPI = {
   getOverview: () => api.get("/community/overview"),
   getResources: (params) => api.get("/community/resources", { params }),
+  getGuidelines: () => api.get("/community/guidelines"),
   getEvents: (params) => api.get("/community/events", { params }),
-  registerEvent: (eventId) => api.post(`/community/events/${eventId}/register`),
+  getEventDetails: (eventId) => api.get(`/community/events/${eventId}`),
+  registerEvent: (eventId, data) => api.post(`/community/events/${eventId}/register`, data),
+  unregisterEvent: (eventId) => api.post(`/community/events/${eventId}/unregister`),
+  getEventParticipants: (eventId) => api.get(`/community/events/${eventId}/participants`),
   getForums: () => api.get("/community/forums"),
   getForumTopics: (forumId) => api.get(`/community/forums/${forumId}/topics`),
-  getPartners: () => api.get("/community/partners"),
+  getPartners: (params) => api.get("/community/partners", { params }),
+  likeResource: (resourceId) => api.post(`/community/resources/${resourceId}/like`),
+  favoriteResource: (resourceId) => api.post(`/community/resources/${resourceId}/favorite`),
+  getResourceInteractions: (resourceId) => api.get(`/community/resources/${resourceId}/interactions`),
+  getUserFavorites: () => api.get("/community/user/favorites"),
+  shareResource: (resourceId, data) => api.post(`/community/resources/${resourceId}/share`, data),
+  
+  // Community Management
+  createCommunity: (communityData) => api.post("/community/create", communityData),
+  joinCommunity: (communityId) => api.post(`/community/${communityId}/join`),
+  leaveCommunity: (communityId) => api.post(`/community/${communityId}/leave`),
+  getMyCommunities: () => api.get("/community/my-communities"),
+  discoverCommunities: (params) => api.get("/community/discover", { params }),
 };
 
 // Users API endpoints
@@ -195,6 +222,20 @@ export const adminAPI = {
   getAnalytics: (params) => api.get("/admin/analytics", { params }),
   broadcast: (messageData) => api.post("/admin/broadcast", messageData),
   getSystemStatus: () => api.get("/admin/system-status"),
+  
+  // Community Management
+  getCommunityContent: () => api.get("/admin/community/content"),
+  getCommunityList: () => api.get("/admin/community/list"),
+  createCommunity: (communityData) => api.post("/admin/community", communityData),
+  updateCommunity: (communityId, communityData) => api.put(`/admin/community/${communityId}`, communityData),
+  deleteCommunity: (communityId) => api.delete(`/admin/community/${communityId}`),
+  addResource: (resourceData) => api.post("/admin/community/resources", resourceData),
+  updateResource: (resourceId, resourceData) => api.put(`/admin/community/resources/${resourceId}`, resourceData),
+  deleteResource: (resourceId) => api.delete(`/admin/community/resources/${resourceId}`),
+  addGuideline: (guidelineData) => api.post("/admin/community/guidelines", guidelineData),
+  updateGuideline: (guidelineId, guidelineData) => api.put(`/admin/community/guidelines/${guidelineId}`, guidelineData),
+  deleteGuideline: (guidelineId) => api.delete(`/admin/community/guidelines/${guidelineId}`),
+  getCommunityAnalytics: () => api.get("/admin/community/analytics"),
 };
 
 // File upload utility

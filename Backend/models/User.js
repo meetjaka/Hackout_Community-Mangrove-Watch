@@ -56,16 +56,7 @@ const userSchema = new mongoose.Schema({
     ],
     default: 'coastal_resident'
   },
-  // Additional role-specific information
-  roleSpecificInfo: {
-    fishingLicenseNo: String,         // For fishermen
-    organizationName: String,         // For NGO admins
-    governmentId: String,            // For government officers
-    researchInstitution: String,     // For researchers
-    localArea: String,               // For coastal residents and local guides
-    expertise: [String],             // Areas of expertise
-    yearsOfExperience: Number        // Experience in the field
-  },
+
   permissions: [{
     type: String,
     enum: [
@@ -192,7 +183,6 @@ const userSchema = new mongoose.Schema({
 });
 
 // Indexes
-userSchema.index({ email: 1 });
 userSchema.index({ phone: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ location: '2dsphere' });
