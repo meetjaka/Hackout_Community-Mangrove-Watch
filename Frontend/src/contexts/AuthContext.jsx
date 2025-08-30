@@ -71,8 +71,13 @@ export const AuthProvider = ({ children }) => {
             payload: { user: response.data, token: state.token },
           });
         } catch (error) {
-          localStorage.removeItem('token');
-          dispatch({ type: 'AUTH_FAILURE', payload: 'Session expired' });
+          // If there's a network error (backend not running), just set loading to false
+          if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+            dispatch({ type: 'AUTH_FAILURE', payload: null });
+          } else {
+            localStorage.removeItem('token');
+            dispatch({ type: 'AUTH_FAILURE', payload: 'Session expired' });
+          }
         }
       } else {
         dispatch({ type: 'AUTH_FAILURE', payload: null });

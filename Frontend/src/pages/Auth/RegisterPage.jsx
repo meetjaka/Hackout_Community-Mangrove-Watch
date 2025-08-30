@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { useAuth } from '../../contexts/AuthContext';
 import { Eye, EyeOff, Mail, Lock, User, MapPin, Building, Phone } from 'lucide-react';
 import LoadingSpinner from '../../components/UI/LoadingSpinner';
+import { ROLE_SPECIFIC_FIELDS } from '../../constants/roleFields';
 
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,6 +17,8 @@ const RegisterPage = () => {
     register,
     handleSubmit,
     watch,
+    setValue,
+    control,
     formState: { errors },
     setError,
   } = useForm();
@@ -25,7 +28,24 @@ const RegisterPage = () => {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      const result = await registerUser(data);
+      console.log('Form data submitted:', data);
+      console.log('Selected role:', data.role);
+      
+      // Format the role-specific data
+      const formattedData = {
+        ...data,
+        roleSpecificInfo: Object.keys(data)
+          .filter(key => key.startsWith('roleSpecificInfo.'))
+          .reduce((acc, key) => {
+            const field = key.split('.')[1];
+            acc[field] = data[key];
+            return acc;
+          }, {})
+      };
+
+      console.log('Formatted data:', formattedData);
+
+      const result = await registerUser(formattedData);
       if (result.success) {
         navigate('/dashboard');
       } else {
@@ -35,6 +55,7 @@ const RegisterPage = () => {
         });
       }
     } catch (error) {
+      console.error('Registration error:', error);
       setError('root', {
         type: 'manual',
         message: 'An unexpected error occurred. Please try again.',
@@ -44,11 +65,16 @@ const RegisterPage = () => {
     }
   };
 
+
+
   const roles = [
-    { value: 'citizen', label: 'Citizen Scientist', description: 'Report incidents and contribute to conservation' },
+    { value: 'fisherman', label: 'Fisherman', description: 'Report incidents during fishing activities and protect marine ecosystems' },
+    { value: 'coastal_resident', label: 'Coastal Resident', description: 'Monitor and report incidents in your local mangrove areas' },
+    { value: 'citizen_scientist', label: 'Citizen Scientist', description: 'Report incidents and contribute to conservation efforts' },
     { value: 'ngo_admin', label: 'NGO Representative', description: 'Manage and validate reports from your organization' },
     { value: 'government_officer', label: 'Government Officer', description: 'Enforcement and policy decision making' },
-    { value: 'researcher', label: 'Researcher', description: 'Access data for scientific research and analysis' },
+    { value: 'researcher', label: 'Researcher', description: 'Access data for scientific analysis and research' },
+    { value: 'local_guide', label: 'Local Guide', description: 'Help monitor and guide conservation activities in your area' },
   ];
 
   return (
@@ -220,35 +246,133 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            {/* Role Selection */}
-            <div>
-              <label className="form-label">Select Your Role</label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {roles.map((role) => (
-                  <label key={role.value} className="relative flex cursor-pointer rounded-lg border border-gray-300 bg-white p-4 shadow-sm focus:outline-none">
-                    <input
-                      type="radio"
-                      name="role"
-                      value={role.value}
-                      className="sr-only"
-                      {...register('role', { required: 'Please select a role' })}
-                    />
-                    <div className="flex flex-1">
-                      <div className="flex flex-col">
-                        <span className="block text-sm font-medium text-gray-900">{role.label}</span>
-                        <span className="mt-1 flex items-center text-sm text-gray-500">{role.description}</span>
-                      </div>
+                                       {/* Role Selection */}
+              <Controller
+                name="role"
+                control={control}
+                rules={{ required: 'Please select a role' }}
+                render={({ field }) => (
+                  <div>
+                    <label className="form-label">Select Your Role</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {roles.map((role) => (
+                        <label key={role.value} className={`relative flex cursor-pointer rounded-lg border-2 p-4 shadow-sm focus:outline-none transition-all duration-200 group ${
+                          field.value === role.value 
+                            ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 shadow-md ring-2 ring-primary-200 dark:ring-primary-800 scale-105' 
+                            : 'border-gray-300 bg-white dark:bg-gray-800 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 hover:scale-102'
+                        }`}>
+                          <input
+                            type="radio"
+                            name="role"
+                            value={role.value}
+                            className="sr-only"
+                            checked={field.value === role.value}
+                            onChange={(e) => {
+                              console.log('Radio clicked:', e.target.value);
+                              field.onChange(e.target.value);
+                            }}
+                          />
+                          <div className="flex flex-1">
+                            <div className="flex flex-col">
+                              <span className={`block text-sm font-medium ${
+                                field.value === role.value 
+                                  ? 'text-primary-700 dark:text-primary-300' 
+                                  : 'text-gray-900 dark:text-gray-100'
+                              }`}>
+                                {role.label}
+                              </span>
+                              <span className={`mt-1 flex items-center text-sm ${
+                                field.value === role.value 
+                                  ? 'text-primary-600 dark:text-primary-400' 
+                                  : 'text-gray-500 dark:text-gray-400'
+                              }`}>
+                                {role.description}
+                              </span>
+                            </div>
+                          </div>
+                          {/* Custom Radio Button */}
+                          <div className="ml-3 flex h-6 w-6 items-center justify-center">
+                            <div className={`h-5 w-5 rounded-full border-2 transition-all duration-200 flex items-center justify-center ${
+                              field.value === role.value 
+                                ? 'border-primary-600 bg-primary-600' 
+                                : 'border-gray-300 dark:border-gray-600 bg-transparent'
+                            }`}>
+                              {field.value === role.value && (
+                                <div className="h-2 w-2 rounded-full bg-white"></div>
+                              )}
+                            </div>
+                          </div>
+                        </label>
+                      ))}
                     </div>
-                    <div className="ml-3 flex h-5 w-5 items-center justify-center">
-                      <div className="h-4 w-4 rounded-full border border-gray-300"></div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-              {errors.role && (
-                <p className="mt-1 text-sm text-danger-600">{errors.role.message}</p>
-              )}
-            </div>
+                    {errors.role && (
+                      <p className="mt-1 text-sm text-danger-600">{errors.role.message}</p>
+                    )}
+                  </div>
+                )}
+              />
+
+                         {/* Role-specific Fields */}
+             {watch('role') && ROLE_SPECIFIC_FIELDS[watch('role')] && (
+               <div className="space-y-6 p-4 border-2 border-primary-200 bg-primary-50 dark:bg-primary-900/10 dark:border-primary-700 rounded-lg">
+                 <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                   Additional Information for {watch('role').replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                 </h3>
+                 <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                   Please fill in the following details for your role
+                 </div>
+                 {ROLE_SPECIFIC_FIELDS[watch('role')].map((field) => (
+                  <div key={field.name}>
+                    <label htmlFor={field.name} className="form-label">
+                      {field.label}
+                    </label>
+                                         {field.type === 'multiSelect' ? (
+                       <div className="space-y-2">
+                         <div className="grid grid-cols-2 gap-2">
+                           {field.options.map((option) => (
+                             <label key={option} className="flex items-center space-x-2 cursor-pointer">
+                               <input
+                                 type="checkbox"
+                                 value={option}
+                                 className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                                 {...register(`${field.name}.${option}`, { 
+                                   required: field.required 
+                                 })}
+                               />
+                               <span className="text-sm text-gray-700 dark:text-gray-300">{option}</span>
+                             </label>
+                           ))}
+                         </div>
+                       </div>
+                     ) : (
+                      <input
+                        id={field.name}
+                        type={field.type}
+                        className={`input-field ${
+                          errors[field.name] ? 'border-danger-500 focus:ring-danger-500' : ''
+                        }`}
+                        placeholder={field.placeholder}
+                        {...register(field.name, { required: field.required })}
+                      />
+                    )}
+                    {errors[field.name] && (
+                      <p className="mt-1 text-sm text-danger-600">
+                        {errors[field.name].message || `${field.label} is required`}
+                      </p>
+                    )}
+                  </div>
+                                 ))}
+               </div>
+             )}
+             
+             {/* No role selected message */}
+             {!watch('role') && (
+               <div className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800">
+                 <div className="text-center text-gray-500 dark:text-gray-400">
+                   <p className="text-sm">Please select a role above to see additional fields</p>
+                 </div>
+               </div>
+             )}
 
             {/* Password */}
             <div>

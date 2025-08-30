@@ -6,9 +6,23 @@ const compression = require('compression');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const http = require('http');
 require('dotenv').config();
 
+// Import services with error handling
+const SocketService = require('./services/socketService');
+let weatherService, pushNotificationService;
+
+// Try to load optional services
+try {
+  weatherService = require('./services/weatherService');
+  pushNotificationService = require('./services/pushNotificationService');
+} catch (error) {
+  console.warn('Warning: Some services could not be loaded:', error.message);
+}
+
 const app = express();
+const server = http.createServer(app);
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -92,17 +106,42 @@ const connectDB = async () => {
   }
 };
 
+// Initialize Socket.io
+const socketService = new SocketService(server);
+
+// Integrate socket instance with routes
+app.set('socketService', socketService);
+
 // Start server
 const PORT = process.env.PORT || 5000;
 const startServer = async () => {
-  await connectDB();
-  app.listen(PORT, () => {
-    console.log(`🚀 Community Mangrove Watch Server running on port ${PORT}`);
-    console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
-  });
+  try {
+    await connectDB();
+    
+    server.listen(PORT, () => {
+      console.log(`🚀 Community Mangrove Watch Server running on port ${PORT}`);
+      console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
+      console.log(`🔌 WebSocket server initialized`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
 };
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  process.exit(1);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (error) => {
+  console.error('Unhandled Rejection:', error);
+  process.exit(1);
+});
 
 startServer();
 
-module.exports = app;
+module.exports = { app, server };

@@ -43,8 +43,28 @@ const userSchema = new mongoose.Schema({
   // Role and Permissions
   role: {
     type: String,
-    enum: ['super_admin', 'ngo_admin', 'government_officer', 'citizen', 'researcher', 'public_visitor'],
-    default: 'citizen'
+    enum: [
+      'super_admin',
+      'ngo_admin',
+      'government_officer',
+      'researcher',
+      'fisherman',
+      'coastal_resident',
+      'citizen_scientist',
+      'local_guide',
+      'public_visitor'
+    ],
+    default: 'coastal_resident'
+  },
+  // Additional role-specific information
+  roleSpecificInfo: {
+    fishingLicenseNo: String,         // For fishermen
+    organizationName: String,         // For NGO admins
+    governmentId: String,            // For government officers
+    researchInstitution: String,     // For researchers
+    localArea: String,               // For coastal residents and local guides
+    expertise: [String],             // Areas of expertise
+    yearsOfExperience: Number        // Experience in the field
   },
   permissions: [{
     type: String,
@@ -96,6 +116,12 @@ const userSchema = new mongoose.Schema({
       type: Boolean,
       default: false
     }
+  },
+  
+  // Role-specific additional information
+  roleSpecificInfo: {
+    type: mongoose.Schema.Types.Mixed,  // Flexible schema for role-specific data
+    default: {}
   },
   
   // Verification and Status

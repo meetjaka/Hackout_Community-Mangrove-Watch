@@ -18,9 +18,9 @@ router.post('/register', [
   body('email').isEmail().normalizeEmail().withMessage('Please enter a valid email'),
   body('phone').matches(/^[\+]?[1-9][\d]{0,15}$/).withMessage('Please enter a valid phone number'),
   body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
-  body('role').optional().isIn(['citizen', 'ngo_admin', 'government_officer', 'researcher']).withMessage('Invalid role'),
-  body('location.coordinates').isArray({ min: 2, max: 2 }).withMessage('Location coordinates are required'),
-  body('location.coordinates.*').isFloat().withMessage('Coordinates must be valid numbers')
+  body('role').optional().isString().withMessage('Invalid role'),
+  body('location.coordinates').optional().isArray({ min: 2, max: 2 }).withMessage('Location coordinates must be an array of two values'),
+  body('location.coordinates.*').optional().isFloat().withMessage('Coordinates must be valid numbers')
 ], async (req, res) => {
   try {
     // Check for validation errors
@@ -57,7 +57,13 @@ router.post('/register', [
       });
     }
 
-    // Create new user
+    // Log the request body for debugging
+    console.log('Registration request:', {
+      firstName, lastName, email, phone, role,
+      roleSpecificInfo: req.body.roleSpecificInfo
+    });
+    
+    // Create new user with default location if not provided
     const user = new User({
       firstName,
       lastName,
@@ -65,10 +71,15 @@ router.post('/register', [
       phone,
       password,
       role,
-      location,
+      // Set default location if not provided
+      location: location || {
+        type: 'Point',
+        coordinates: [0, 0]  // Default coordinates
+      },
       address,
       organization,
-      bio
+      bio,
+      roleSpecificInfo: req.body.roleSpecificInfo
     });
 
     // Set default permissions based on role

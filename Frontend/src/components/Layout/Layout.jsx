@@ -19,7 +19,15 @@ import {
 import LoadingSpinner from '../UI/LoadingSpinner';
 
 const Layout = ({ children }) => {
-  const { user, isAuthenticated, logout } = useAuth();
+  // Add error handling for auth context
+  let auth = { user: null, isAuthenticated: false, loading: false, logout: () => {} };
+  try {
+    auth = useAuth();
+  } catch (error) {
+    console.warn('Auth context not available:', error.message);
+  }
+  
+  const { user, isAuthenticated, logout, loading } = auth;
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
@@ -43,7 +51,8 @@ const Layout = ({ children }) => {
     setMobileMenuOpen(false);
   };
 
-  if (!isAuthenticated && location.pathname !== '/' && !location.pathname.startsWith('/login') && !location.pathname.startsWith('/register')) {
+  // Only show loading spinner if we're still loading and trying to access a protected route
+  if (loading && location.pathname !== '/' && !location.pathname.startsWith('/login') && !location.pathname.startsWith('/register')) {
     return <LoadingSpinner size="lg" text="Loading..." />;
   }
 
@@ -89,7 +98,10 @@ const Layout = ({ children }) => {
             <div className="flex items-center space-x-4">
               {/* Theme toggle */}
               <button
-                onClick={toggleTheme}
+                onClick={() => {
+                  console.log('Theme toggle clicked, current theme:', theme);
+                  toggleTheme();
+                }}
                 className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700 transition-colors duration-200"
                 aria-label="Toggle theme"
               >
@@ -136,14 +148,17 @@ const Layout = ({ children }) => {
                         <User className="w-4 h-4" />
                         <span>Profile</span>
                       </Link>
-                      <Link
-                        to="/admin"
-                        className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <Settings className="w-4 h-4" />
-                        <span>Admin</span>
-                      </Link>
+                      {/* Only show Admin option for admin roles */}
+                      {user && ['super_admin', 'ngo_admin', 'government_officer', 'researcher'].includes(user.role) && (
+                        <Link
+                          to="/admin"
+                          className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <Settings className="w-4 h-4" />
+                          <span>Admin</span>
+                        </Link>
+                      )}
                       <button
                         onClick={handleLogout}
                         className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
