@@ -1,6 +1,7 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
+const Report = require('../models/Report');
 const { auth, optionalAuth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -10,21 +11,29 @@ const router = express.Router();
 // @access  Public
 router.get('/overview', async (req, res) => {
   try {
-    // Get community statistics
+    // Get community statistics from database
     const totalUsers = await User.countDocuments({ isActive: true });
-    const totalReports = await require('../models/Report').countDocuments();
+    const totalReports = await Report.countDocuments();
     
-    // Get top contributors
+    // Get top contributors based on points
     const topContributors = await User.find({ isActive: true })
       .sort({ points: -1 })
       .limit(10)
-      .select('firstName lastName avatar points level badges organization');
+      .select('firstName lastName avatar points level badges organization location');
     
-    // Get recent community activity
-    const recentReports = await require('../models/Report').find()
+    // Get recent community activity (recent reports)
+    const recentReports = await Report.find()
       .sort({ createdAt: -1 })
       .limit(5)
       .populate('reporter', 'firstName lastName avatar');
+    
+    // Calculate active communities (based on regions with reports)
+    const activeRegions = await Report.distinct('location.address.state');
+    const activeCommunities = activeRegions.length;
+    
+    // Calculate total mangrove areas (based on unique coordinates)
+    const uniqueLocations = await Report.distinct('location.coordinates');
+    const totalMangroveAreas = uniqueLocations.length;
     
     res.json({
       success: true,
@@ -32,8 +41,8 @@ router.get('/overview', async (req, res) => {
         overview: {
           totalUsers,
           totalReports,
-          activeCommunities: 15, // Hardcoded for now
-          totalMangroveAreas: 25
+          activeCommunities,
+          totalMangroveAreas
         },
         topContributors,
         recentActivity: recentReports
@@ -56,7 +65,8 @@ router.get('/resources', async (req, res) => {
   try {
     const { category, language = 'en' } = req.query;
     
-    // Define community resources
+    // In a real app, you would have a Resource model
+    // For now, we'll return a curated list of resources
     const resources = [
       {
         id: 'mangrove-basics',
@@ -164,9 +174,10 @@ router.get('/resources', async (req, res) => {
 // @access  Public
 router.get('/events', async (req, res) => {
   try {
-    const { upcoming = true, location } = req.query;
+    const { upcoming = true, location, limit = 10 } = req.query;
     
-    // Mock events data (in real app, this would come from a database)
+    // In a real app, you would have an Event model
+    // For now, we'll return a curated list of events
     const events = [
       {
         id: '1',
@@ -229,6 +240,11 @@ router.get('/events', async (req, res) => {
     // Sort events by date
     filteredEvents.sort((a, b) => a.date - b.date);
     
+    // Apply limit
+    if (limit) {
+      filteredEvents = filteredEvents.slice(0, parseInt(limit));
+    }
+    
     res.json({
       success: true,
       data: {
@@ -254,7 +270,7 @@ router.post('/events/:id/register', auth, async (req, res) => {
   try {
     const { id } = req.params;
     
-    // In a real app, you would have an Event model and check if event exists
+    // In a real app, you would have an Event model and EventRegistration model
     // For now, we'll just return a success message
     
     res.json({
@@ -283,7 +299,8 @@ router.get('/forums', async (req, res) => {
   try {
     const { category, sort = 'recent' } = req.query;
     
-    // Mock forum data (in real app, this would come from a database)
+    // In a real app, you would have a Forum model
+    // For now, we'll return a curated list of forums
     const forums = [
       {
         id: 'general',
@@ -366,7 +383,8 @@ router.get('/forums/:id/topics', async (req, res) => {
     const { id } = req.params;
     const { page = 1, limit = 20, sort = 'recent' } = req.query;
     
-    // Mock topics data (in real app, this would come from a database)
+    // In a real app, you would have a Topic model
+    // For now, we'll return a curated list of topics
     const topics = [
       {
         id: '1',
@@ -446,7 +464,8 @@ router.get('/partners', async (req, res) => {
   try {
     const { type, region } = req.query;
     
-    // Mock partners data (in real app, this would come from a database)
+    // In a real app, you would have a Partner model
+    // For now, we'll return a curated list of partners
     const partners = [
       {
         id: '1',

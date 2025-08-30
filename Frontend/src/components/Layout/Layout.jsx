@@ -1,47 +1,80 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
-import { 
-  Menu, 
-  X, 
-  Sun, 
-  Moon, 
-  MapPin, 
-  Shield, 
-  Users, 
-  BarChart3, 
+import React, { useState, useRef, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
+import {
+  Menu,
+  X,
+  Sun,
+  Moon,
+  MapPin,
+  Shield,
+  Users,
+  BarChart3,
   Trophy,
   LogOut,
   User,
-  Settings
-} from 'lucide-react';
-import LoadingSpinner from '../UI/LoadingSpinner';
+  Settings,
+} from "lucide-react";
+import LoadingSpinner from "../UI/LoadingSpinner";
 
 const Layout = ({ children }) => {
+  const profileDropdownRef = useRef(null);
+
   // Add error handling for auth context
-  let auth = { user: null, isAuthenticated: false, loading: false, logout: () => {} };
+  let auth = {
+    user: null,
+    isAuthenticated: false,
+    loading: false,
+    logout: () => {},
+  };
   try {
     auth = useAuth();
   } catch (error) {
-    console.warn('Auth context not available:', error.message);
+    console.warn("Auth context not available:", error.message);
   }
-  
+
+  // Handle clicking outside of profile dropdown
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(event.target)
+      ) {
+        setProfileDropdownVisible(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const { user, isAuthenticated, logout, loading } = auth;
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileDropdownVisible, setProfileDropdownVisible] = useState(false);
   const location = useLocation();
 
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: BarChart3, requiresAuth: true },
-    { name: 'Reports', href: '/reports', icon: Shield, requiresAuth: true },
-    { name: 'Community', href: '/community', icon: Users, requiresAuth: true },
-    { name: 'Leaderboard', href: '/leaderboard', icon: Trophy, requiresAuth: true },
+    {
+      name: "Dashboard",
+      href: "/dashboard",
+      icon: BarChart3,
+      requiresAuth: true,
+    },
+    { name: "Reports", href: "/reports", icon: Shield, requiresAuth: true },
+    { name: "Community", href: "/community", icon: Users, requiresAuth: true },
+    {
+      name: "Leaderboard",
+      href: "/leaderboard",
+      icon: Trophy,
+      requiresAuth: true,
+    },
   ];
 
   const isActiveRoute = (href) => {
-    if (href === '/') {
-      return location.pathname === '/';
+    if (href === "/") {
+      return location.pathname === "/";
     }
     return location.pathname.startsWith(href);
   };
@@ -52,7 +85,12 @@ const Layout = ({ children }) => {
   };
 
   // Only show loading spinner if we're still loading and trying to access a protected route
-  if (loading && location.pathname !== '/' && !location.pathname.startsWith('/login') && !location.pathname.startsWith('/register')) {
+  if (
+    loading &&
+    location.pathname !== "/" &&
+    !location.pathname.startsWith("/login") &&
+    !location.pathname.startsWith("/register")
+  ) {
     return <LoadingSpinner size="lg" text="Loading..." />;
   }
 
@@ -83,8 +121,8 @@ const Layout = ({ children }) => {
                     to={item.href}
                     className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
                       isActiveRoute(item.href)
-                        ? 'text-primary-600 bg-primary-50 dark:bg-primary-900/20'
-                        : 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white'
+                        ? "text-primary-600 bg-primary-50 dark:bg-primary-900/20"
+                        : "text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
                     }`}
                   >
                     <item.icon className="w-4 h-4" />
@@ -99,13 +137,13 @@ const Layout = ({ children }) => {
               {/* Theme toggle */}
               <button
                 onClick={() => {
-                  console.log('Theme toggle clicked, current theme:', theme);
+                  console.log("Theme toggle clicked, current theme:", theme);
                   toggleTheme();
                 }}
                 className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700 transition-colors duration-200"
                 aria-label="Toggle theme"
               >
-                {theme === 'dark' ? (
+                {theme === "dark" ? (
                   <Sun className="w-5 h-5" />
                 ) : (
                   <Moon className="w-5 h-5" />
@@ -114,7 +152,7 @@ const Layout = ({ children }) => {
 
               {/* User menu */}
               {isAuthenticated ? (
-                <div className="relative">
+                <div className="relative" ref={profileDropdownRef}>
                   <div className="flex items-center space-x-3">
                     <div className="text-right hidden sm:block">
                       <p className="text-sm font-medium text-gray-900 dark:text-white">
@@ -126,7 +164,9 @@ const Layout = ({ children }) => {
                     </div>
                     <div className="relative">
                       <button
-                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        onClick={() =>
+                          setProfileDropdownVisible(!profileDropdownVisible)
+                        }
                         className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
                       >
                         <div className="w-8 h-8 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center">
@@ -138,27 +178,36 @@ const Layout = ({ children }) => {
                   </div>
 
                   {/* Dropdown menu */}
-                  {mobileMenuOpen && (
+                  {profileDropdownVisible && (
                     <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                       <Link
                         to="/profile"
                         className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        onClick={() => setMobileMenuOpen(false)}
+                        onClick={() => {
+                          console.log("Profile link clicked");
+                          setProfileDropdownVisible(false);
+                        }}
                       >
                         <User className="w-4 h-4" />
                         <span>Profile</span>
                       </Link>
                       {/* Only show Admin option for admin roles */}
-                      {user && ['super_admin', 'ngo_admin', 'government_officer', 'researcher'].includes(user.role) && (
-                        <Link
-                          to="/admin"
-                          className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          <Settings className="w-4 h-4" />
-                          <span>Admin</span>
-                        </Link>
-                      )}
+                      {user &&
+                        [
+                          "super_admin",
+                          "ngo_admin",
+                          "government_officer",
+                          "researcher",
+                        ].includes(user.role) && (
+                          <Link
+                            to="/admin"
+                            className="flex items-center space-x-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            onClick={() => setProfileDropdownVisible(false)}
+                          >
+                            <Settings className="w-4 h-4" />
+                            <span>Admin</span>
+                          </Link>
+                        )}
                       <button
                         onClick={handleLogout}
                         className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -177,10 +226,7 @@ const Layout = ({ children }) => {
                   >
                     Login
                   </Link>
-                  <Link
-                    to="/register"
-                    className="btn-primary"
-                  >
+                  <Link to="/register" className="btn-primary">
                     Get Started
                   </Link>
                 </div>
@@ -200,8 +246,8 @@ const Layout = ({ children }) => {
                 to={item.href}
                 className={`flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
                   isActiveRoute(item.href)
-                    ? 'text-primary-600 bg-primary-50 dark:bg-primary-900/20'
-                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white'
+                    ? "text-primary-600 bg-primary-50 dark:bg-primary-900/20"
+                    : "text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
                 }`}
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -214,9 +260,7 @@ const Layout = ({ children }) => {
       )}
 
       {/* Main content */}
-      <main className="flex-1">
-        {children}
-      </main>
+      <main className="flex-1">{children}</main>
 
       {/* Footer */}
       <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
@@ -232,57 +276,76 @@ const Layout = ({ children }) => {
                 </span>
               </div>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Empowering communities to protect and monitor mangrove ecosystems through participatory monitoring and citizen science.
+                Empowering communities to protect and monitor mangrove
+                ecosystems through participatory monitoring and citizen science.
               </p>
             </div>
-            
+
             <div>
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4">
                 Quick Links
               </h3>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/about" className="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                  <Link
+                    to="/about"
+                    className="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+                  >
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <Link to="/resources" className="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                  <Link
+                    to="/resources"
+                    className="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+                  >
                     Resources
                   </Link>
                 </li>
                 <li>
-                  <Link to="/contact" className="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                  <Link
+                    to="/contact"
+                    className="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+                  >
                     Contact
                   </Link>
                 </li>
               </ul>
             </div>
-            
+
             <div>
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-4">
                 Connect
               </h3>
               <ul className="space-y-2">
                 <li>
-                  <a href="#" className="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                  <a
+                    href="#"
+                    className="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+                  >
                     Twitter
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                  <a
+                    href="#"
+                    className="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+                  >
                     Facebook
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                  <a
+                    href="#"
+                    className="text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+                  >
                     Instagram
                   </a>
                 </li>
               </ul>
             </div>
           </div>
-          
+
           <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
             <p className="text-center text-gray-500 dark:text-gray-400">
               © 2024 Community Mangrove Watch. All rights reserved.

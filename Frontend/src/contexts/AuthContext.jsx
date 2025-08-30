@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import toast from 'react-hot-toast';
@@ -59,27 +59,80 @@ const authReducer = (state, action) => {
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
   const navigate = useNavigate();
-
+  
+  // Add rate limiting protection
+  const [lastRequestTime, setLastRequestTime] = useState(0);
+  const [rateLimitCountdown, setRateLimitCountdown] = useState(0);
+  const MIN_REQUEST_INTERVAL = 1000; // 1 second between requests (reduced from 2)
+  
+  const checkRateLimit = () => {
+    const now = Date.now();
+    if (now - lastRequestTime < MIN_REQUEST_INTERVAL) {
+      const remainingTime = MIN_REQUEST_INTERVAL - (now - lastRequestTime);
+      const seconds = Math.ceil(remainingTime / 1000);
+      
+      // Start countdown
+      setRateLimitCountdown(seconds);
+      
+      // More user-friendly message
+      if (seconds === 1) {
+        toast.error('Please wait 1 second before trying again.');
+      } else {
+        toast.error(`Please wait ${seconds} seconds before trying again.`);
+      }
+      
+      // Clear countdown after delay
+      setTimeout(() => {
+        setRateLimitCountdown(0);
+      }, remainingTime);
+      
+      return false;
+    }
+    setLastRequestTime(now);
+    setRateLimitCountdown(0);
+    return true;
+  };
+  
   // Check if user is authenticated on app load
   useEffect(() => {
     const checkAuth = async () => {
+      console.log('🔍 Checking authentication state...');
+      console.log('🔍 Current token:', state.token);
+      
       if (state.token) {
         try {
+          console.log('🔍 Token found, checking with backend...');
           const response = await authAPI.getCurrentUser();
-          dispatch({
-            type: 'AUTH_SUCCESS',
-            payload: { user: response.data, token: state.token },
-          });
+          console.log('🔍 Backend auth check successful:', response.data);
+          
+          // Backend returns data in nested structure: { success: true, data: { user } }
+          if (response.data.success && response.data.data && response.data.data.user) {
+            const user = response.data.data.user;
+            console.log('🔍 User data extracted:', user);
+            
+            dispatch({
+              type: 'AUTH_SUCCESS',
+              payload: { user, token: state.token },
+            });
+            console.log('🔍 Authentication state updated to SUCCESS');
+          } else {
+            console.error('🔍 Invalid response format from getCurrentUser:', response.data);
+            throw new Error('Invalid response format from getCurrentUser');
+          }
         } catch (error) {
+          console.error('🔍 Auth check error:', error);
           // If there's a network error (backend not running), just set loading to false
-          if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+          if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
+            console.log('🔍 Network error, setting auth to failure');
             dispatch({ type: 'AUTH_FAILURE', payload: null });
           } else {
+            console.log('🔍 Other error, removing token and setting auth to failure');
             localStorage.removeItem('token');
             dispatch({ type: 'AUTH_FAILURE', payload: 'Session expired' });
           }
         }
       } else {
+        console.log('🔍 No token found, setting auth to failure');
         dispatch({ type: 'AUTH_FAILURE', payload: null });
       }
     };
@@ -97,40 +150,129 @@ export const AuthProvider = ({ children }) => {
   }, [state.token]);
 
   const login = async (credentials) => {
+    console.log('🔐 Login attempt started');
     dispatch({ type: 'AUTH_START' });
     try {
       const response = await authAPI.login(credentials);
-      dispatch({
-        type: 'AUTH_SUCCESS',
-        payload: response.data,
-      });
-      toast.success('Login successful!');
-      navigate('/dashboard');
-      return { success: true };
+      console.log('🔐 Login response:', response.data);
+      
+      // Backend returns data in nested structure: { success: true, data: { user, token } }
+      if (response.data.success && response.data.data) {
+        const { user, token } = response.data.data;
+        
+        if (user && token) {
+          console.log('🔐 Login successful, dispatching AUTH_SUCCESS');
+          dispatch({
+            type: 'AUTH_SUCCESS',
+            payload: { user, token },
+          });
+          
+          // Store token immediately
+          localStorage.setItem('token', token);
+          console.log('🔐 Token stored in localStorage');
+          
+          toast.success('Login successful!');
+          navigate('/dashboard');
+          return { success: true };
+        } else {
+          console.error('🔐 Missing user or token in response data');
+          throw new Error('Invalid response format from server');
+        }
+      } else {
+        console.error('🔐 Invalid response format:', response.data);
+        throw new Error('Invalid response format from server');
+      }
     } catch (error) {
-      const message = error.response?.data?.message || 'Login failed';
-      dispatch({ type: 'AUTH_FAILURE', payload: message });
-      toast.error(message);
-      return { success: false, error: message };
+      console.error('🔐 Login error:', error);
+      
+      // Handle specific HTTP status codes
+      if (error.response?.status === 429) {
+        const message = 'Too many requests. Please wait a moment and try again.';
+        dispatch({ type: 'AUTH_FAILURE', payload: message });
+        toast.error(message);
+        return { success: false, error: message };
+      } else if (error.response?.status === 401) {
+        const message = 'Invalid email or password. Please try again.';
+        dispatch({ type: 'AUTH_FAILURE', payload: message });
+        toast.error(message);
+        return { success: false, error: message };
+      } else if (error.response?.status === 500) {
+        const message = 'Server error. Please try again later.';
+        dispatch({ type: 'AUTH_FAILURE', payload: message });
+        toast.error(message);
+        return { success: false, error: message };
+      } else {
+        const message = error.response?.data?.message || error.message || 'Login failed';
+        dispatch({ type: 'AUTH_FAILURE', payload: message });
+        toast.error(message);
+        return { success: false, error: message };
+      }
     }
   };
 
   const register = async (userData) => {
+    console.log('🔐 Registration attempt started');
     dispatch({ type: 'AUTH_START' });
     try {
       const response = await authAPI.register(userData);
-      dispatch({
-        type: 'AUTH_SUCCESS',
-        payload: response.data,
-      });
-      toast.success('Registration successful! Welcome to Community Mangrove Watch!');
-      navigate('/dashboard');
-      return { success: true };
+      console.log('🔐 Registration response:', response.data);
+      
+      // Backend returns data in nested structure: { success: true, data: { user, token } }
+      if (response.data.success && response.data.data) {
+        const { user, token } = response.data.data;
+        
+        if (user && token) {
+          console.log('🔐 Registration successful, dispatching AUTH_SUCCESS');
+          dispatch({
+            type: 'AUTH_SUCCESS',
+            payload: { user, token },
+          });
+          
+          // Store token immediately
+          localStorage.setItem('token', token);
+          console.log('🔐 Token stored in localStorage');
+          
+          toast.success('Registration successful! Welcome to Community Mangrove Watch!');
+          navigate('/dashboard');
+          return { success: true };
+        } else {
+          console.error('🔐 Missing user or token in response data');
+          throw new Error('Invalid response format from server');
+        }
+      } else {
+        console.error('🔐 Invalid response format:', response.data);
+        throw new Error('Invalid response format from server');
+      }
     } catch (error) {
-      const message = error.response?.data?.message || 'Registration failed';
-      dispatch({ type: 'AUTH_FAILURE', payload: message });
-      toast.error(message);
-      return { success: false, error: message };
+      console.error('🔐 Registration error:', error);
+      
+      // Handle specific HTTP status codes
+      if (error.response?.status === 429) {
+        const message = 'Too many requests. Please wait a moment and try again.';
+        dispatch({ type: 'AUTH_FAILURE', payload: message });
+        toast.error(message);
+        return { success: false, error: message };
+      } else if (error.response?.status === 400) {
+        const message = error.response?.data?.message || 'Invalid registration data. Please check your information.';
+        dispatch({ type: 'AUTH_FAILURE', payload: message });
+        toast.error(message);
+        return { success: false, error: message };
+      } else if (error.response?.status === 409) {
+        const message = 'User already exists with this email or phone number.';
+        dispatch({ type: 'AUTH_FAILURE', payload: message });
+        toast.error(message);
+        return { success: false, error: message };
+      } else if (error.response?.status === 500) {
+        const message = 'Server error. Please try again later.';
+        dispatch({ type: 'AUTH_FAILURE', payload: message });
+        toast.error(message);
+        return { success: false, error: message };
+      } else {
+        const message = error.response?.data?.message || error.message || 'Registration failed';
+        dispatch({ type: 'AUTH_FAILURE', payload: message });
+        toast.error(message);
+        return { success: false, error: message };
+      }
     }
   };
 
@@ -215,6 +357,7 @@ export const AuthProvider = ({ children }) => {
     clearError,
     hasRole,
     hasPermission,
+    rateLimitCountdown, // Add this so components can show countdown
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

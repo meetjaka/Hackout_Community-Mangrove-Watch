@@ -1,18 +1,18 @@
-import axios from 'axios';
+import axios from "axios";
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5002/api',
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5003/api",
   timeout: 10000,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -23,124 +23,187 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle common errors
+// Add response interceptor for better error handling
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+  async (error) => {
+    // Handle rate limiting with retry mechanism
+    if (error.response?.status === 429) {
+      console.warn(
+        "⚠️ Rate limit exceeded. Please wait before making more requests."
+      );
+
+      // Show user-friendly message
+      if (typeof window !== "undefined" && window.toast) {
+        window.toast.error(
+          "Too many requests. Please wait a moment and try again."
+        );
+      }
+
+      // Add retry-after header support if available
+      const retryAfter = error.response.headers["retry-after"];
+      if (retryAfter) {
+        console.log(
+          `⏰ Server suggests waiting ${retryAfter} seconds before retrying.`
+        );
+      }
     }
+
+    // Handle authentication errors
+    if (error.response?.status === 401) {
+      console.warn("⚠️ Authentication failed. Token may be expired.");
+
+      // Clear token and redirect to login if it's an auth error
+      localStorage.removeItem("token");
+
+      // Only redirect if we're not already on login/register pages
+      if (
+        window.location.pathname !== "/login" &&
+        window.location.pathname !== "/register"
+      ) {
+        window.location.href = "/login";
+      }
+    }
+
     return Promise.reject(error);
   }
 );
 
+// Helper function to retry requests with exponential backoff
+export const retryRequest = async (
+  requestFn,
+  maxRetries = 3,
+  baseDelay = 1000
+) => {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await requestFn();
+    } catch (error) {
+      if (error.response?.status === 429 && attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt); // Exponential backoff
+        console.log(
+          `⏰ Rate limited. Waiting ${delay}ms before retry ${
+            attempt + 1
+          }/${maxRetries}`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+};
+
 // Auth API endpoints
 export const authAPI = {
-  register: (userData) => api.post('/auth/register', userData),
-  login: (credentials) => api.post('/auth/login', credentials),
-  getCurrentUser: () => api.get('/auth/me'),
-  forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
-  resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
-  updateProfile: (profileData) => api.put('/auth/profile', profileData),
-  changePassword: (passwordData) => api.put('/auth/password', passwordData),
-  logout: () => api.post('/auth/logout'),
-  refreshToken: () => api.post('/auth/refresh-token'),
+  register: (userData) => api.post("/auth/register", userData),
+  login: (credentials) => api.post("/auth/login", credentials),
+  getCurrentUser: () => api.get("/auth/me"),
+  forgotPassword: (email) => api.post("/auth/forgot-password", { email }),
+  resetPassword: (token, password) =>
+    api.post("/auth/reset-password", { token, password }),
+  updateProfile: (profileData) => api.put("/auth/profile", profileData),
+  changePassword: (passwordData) => api.put("/auth/password", passwordData),
+  logout: () => api.post("/auth/logout"),
+  refreshToken: () => api.post("/auth/refresh-token"),
 };
 
 // Reports API endpoints
 export const reportsAPI = {
-  getAll: (params) => api.get('/reports', { params }),
+  getAll: (params) => api.get("/reports", { params }),
   getById: (id) => api.get(`/reports/${id}`),
   create: (reportData) => {
     const formData = new FormData();
-    Object.keys(reportData).forEach(key => {
-      if (key === 'media' && reportData[key]) {
-        reportData[key].forEach(file => {
-          formData.append('media', file);
+    Object.keys(reportData).forEach((key) => {
+      if (key === "media" && reportData[key]) {
+        reportData[key].forEach((file) => {
+          formData.append("media", file);
         });
       } else {
         formData.append(key, reportData[key]);
       }
     });
-    return api.post('/reports', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+    return api.post("/reports", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
     });
   },
   update: (id, reportData) => api.put(`/reports/${id}`, reportData),
   delete: (id) => api.delete(`/reports/${id}`),
-  validate: (id, validationData) => api.post(`/reports/${id}/validate`, validationData),
+  validate: (id, validationData) =>
+    api.post(`/reports/${id}/validate`, validationData),
   like: (id) => api.post(`/reports/${id}/like`),
   comment: (id, commentData) => api.post(`/reports/${id}/comment`, commentData),
-  getMyReports: () => api.get('/users/reports'),
-  getByLocation: (lat, lng, radius) => api.get('/reports', { params: { lat, lng, radius } }),
-  getByCategory: (category) => api.get('/reports', { params: { category } }),
+  getMyReports: () => api.get("/users/reports"),
+  getByLocation: (lat, lng, radius) =>
+    api.get("/reports", { params: { lat, lng, radius } }),
+  getByCategory: (category) => api.get("/reports", { params: { category } }),
 };
 
 // Dashboard API endpoints
 export const dashboardAPI = {
-  getOverview: () => api.get('/dashboard/overview'),
-  getAnalytics: (params) => api.get('/dashboard/analytics', { params }),
-  getHeatmap: () => api.get('/dashboard/heatmap'),
-  getTrends: (params) => api.get('/dashboard/trends', { params }),
-  exportData: (format, params) => api.get('/dashboard/export', { 
-    params: { format, ...params },
-    responseType: 'blob'
-  }),
+  getOverview: () => api.get("/dashboard/overview"),
+  getAnalytics: (params) => api.get("/dashboard/analytics", { params }),
+  getHeatmap: () => api.get("/dashboard/heatmap"),
+  getTrends: (params) => api.get("/dashboard/trends", { params }),
+  exportData: (format, params) =>
+    api.get("/dashboard/export", {
+      params: { format, ...params },
+      responseType: "blob",
+    }),
 };
 
 // Gamification API endpoints
 export const gamificationAPI = {
-  getLeaderboard: (params) => api.get('/gamification/leaderboard', { params }),
-  getBadges: () => api.get('/gamification/badges'),
-  getProfile: () => api.get('/gamification/profile'),
-  getAchievements: () => api.get('/gamification/achievements'),
+  getLeaderboard: (params) => api.get("/gamification/leaderboard", { params }),
+  getBadges: () => api.get("/gamification/badges"),
+  getProfile: () => api.get("/gamification/profile"),
+  getAchievements: () => api.get("/gamification/achievements"),
 };
 
 // Community API endpoints
 export const communityAPI = {
-  getOverview: () => api.get('/community/overview'),
-  getResources: (params) => api.get('/community/resources', { params }),
-  getEvents: (params) => api.get('/community/events', { params }),
+  getOverview: () => api.get("/community/overview"),
+  getResources: (params) => api.get("/community/resources", { params }),
+  getEvents: (params) => api.get("/community/events", { params }),
   registerEvent: (eventId) => api.post(`/community/events/${eventId}/register`),
-  getForums: () => api.get('/community/forums'),
+  getForums: () => api.get("/community/forums"),
   getForumTopics: (forumId) => api.get(`/community/forums/${forumId}/topics`),
-  getPartners: () => api.get('/community/partners'),
+  getPartners: () => api.get("/community/partners"),
 };
 
 // Users API endpoints
 export const usersAPI = {
-  getProfile: () => api.get('/users/profile'),
-  updateProfile: (profileData) => api.put('/users/profile', profileData),
-  changePassword: (passwordData) => api.put('/users/password', passwordData),
-  getMyReports: () => api.get('/users/reports'),
-  getStatistics: () => api.get('/users/statistics'),
+  getProfile: () => api.get("/users/profile"),
+  updateProfile: (profileData) => api.put("/users/profile", profileData),
+  changePassword: (passwordData) => api.put("/users/password", passwordData),
+  getMyReports: () => api.get("/users/reports"),
+  getStatistics: () => api.get("/users/statistics"),
   getPublicProfile: (userId) => api.get(`/users/${userId}`),
   getPublicReports: (userId) => api.get(`/users/${userId}/reports`),
-  deactivateAccount: () => api.delete('/users/profile'),
+  deactivateAccount: () => api.delete("/users/profile"),
 };
 
 // Admin API endpoints
 export const adminAPI = {
-  getDashboard: () => api.get('/admin/dashboard'),
-  getAllUsers: (params) => api.get('/admin/users', { params }),
+  getDashboard: () => api.get("/admin/dashboard"),
+  getAllUsers: (params) => api.get("/admin/users", { params }),
   updateUser: (userId, userData) => api.put(`/admin/users/${userId}`, userData),
   deleteUser: (userId) => api.delete(`/admin/users/${userId}`),
-  getAllReports: (params) => api.get('/admin/reports', { params }),
-  updateReport: (reportId, reportData) => api.put(`/admin/reports/${reportId}`, reportData),
-  getAnalytics: (params) => api.get('/admin/analytics', { params }),
-  broadcast: (messageData) => api.post('/admin/broadcast', messageData),
-  getSystemStatus: () => api.get('/admin/system-status'),
+  getAllReports: (params) => api.get("/admin/reports", { params }),
+  updateReport: (reportId, reportData) =>
+    api.put(`/admin/reports/${reportId}`, reportData),
+  getAnalytics: (params) => api.get("/admin/analytics", { params }),
+  broadcast: (messageData) => api.post("/admin/broadcast", messageData),
+  getSystemStatus: () => api.get("/admin/system-status"),
 };
 
 // File upload utility
 export const uploadFile = async (file, onProgress) => {
   const formData = new FormData();
-  formData.append('file', file);
-  
-  return api.post('/upload', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+  formData.append("file", file);
+
+  return api.post("/upload", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
     onUploadProgress: (progressEvent) => {
       if (onProgress) {
         const percentCompleted = Math.round(

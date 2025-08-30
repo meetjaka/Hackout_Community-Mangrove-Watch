@@ -71,6 +71,11 @@ function App() {
                       <CommunityPage />
                     </ProtectedRoute>
                   } />
+                  <Route path="/gamification/leaderboard" element={
+                    <ProtectedRoute>
+                      <LeaderboardPage />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/leaderboard" element={
                     <ProtectedRoute>
                       <LeaderboardPage />

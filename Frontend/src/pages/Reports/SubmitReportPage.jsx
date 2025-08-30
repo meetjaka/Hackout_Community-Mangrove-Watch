@@ -1,498 +1,594 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { MapPin, Upload, AlertTriangle, Image, X, ArrowLeft, Save } from 'lucide-react';
-import { reportsAPI } from '../../services/api';
-import { useAuth } from '../../contexts/AuthContext';
-import toast from 'react-hot-toast';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import {
+  MapPin,
+  Upload,
+  AlertTriangle,
+  Image,
+  X,
+  ArrowLeft,
+  Save,
+  Leaf,
+  Camera,
+  MapPinned,
+  AlertOctagon,
+  Calendar,
+  Info,
+  Crosshair,
+} from "lucide-react";
+import { reportsAPI } from "../../services/api";
+import { useAuth } from "../../contexts/AuthContext";
+import toast from "react-hot-toast";
+import { motion, AnimatePresence } from "framer-motion";
 
 const SubmitReportPage = () => {
   const { state: authState } = useAuth();
   const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors }, reset, watch } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    watch,
+  } = useForm();
+
   const [loading, setLoading] = useState(false);
   const [photos, setPhotos] = useState([]);
   const [previewImages, setPreviewImages] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [coordinates, setCoordinates] = useState({ lat: '', lng: '' });
+  const [coordinates, setCoordinates] = useState({ lat: "", lng: "" });
   const [useCurrentLocation, setUseCurrentLocation] = useState(false);
-  
-  // Monitor the values of these fields
-  const category = watch('category');
+  const [currentStep, setCurrentStep] = useState(1);
 
-  const onSubmit = async (data) => {
-    try {
-      setLoading(true);
-      
-      // Add location data to form
-      const reportData = {
-        ...data,
-        location: {
-          coordinates: [parseFloat(coordinates.lng), parseFloat(coordinates.lat)],
-          address: {
-            street: data.street,
-            city: data.city,
-            state: data.state,
-            country: data.country,
-            zipCode: data.zipCode
-          },
-          mangroveArea: data.mangroveArea,
-          nearestLandmark: data.nearestLandmark
-        },
-        // Add photo files to media array
-        media: photos
-      };
-      
-      // In a real app, this would submit to the backend
-      // const response = await reportsAPI.create(reportData);
-      
-      // Simulate API call with a delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      toast.success('Report submitted successfully!');
-      navigate('/reports');
-    } catch (error) {
-      console.error('Error submitting report:', error);
-      toast.error('Failed to submit report. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const handlePhotoUpload = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
-    
-    // Limit the number of photos
-    const remainingSlots = 5 - photos.length;
-    const filesToProcess = files.slice(0, remainingSlots);
-    
-    if (filesToProcess.length === 0) {
-      toast.error('Maximum 5 photos allowed');
-      return;
-    }
-    
-    // Add to photos array
-    setPhotos(prev => [...prev, ...filesToProcess]);
-    
+  const formSteps = [
+    { id: 1, title: "Basic Information", icon: Info },
+    { id: 2, title: "Location Details", icon: MapPinned },
+    { id: 3, title: "Evidence & Media", icon: Camera },
+    { id: 4, title: "Additional Details", icon: AlertOctagon },
+  ];
+
+  const handlePhotoSelect = (event) => {
+    const files = Array.from(event.target.files);
+    setPhotos((prevPhotos) => [...prevPhotos, ...files]);
+
     // Create preview URLs
-    const newPreviewImages = filesToProcess.map(file => ({
-      file,
-      preview: URL.createObjectURL(file)
+    const newPreviews = files.map((file) => ({
+      url: URL.createObjectURL(file),
+      caption: "",
     }));
-    
-    setPreviewImages(prev => [...prev, ...newPreviewImages]);
+    setPreviewImages((prev) => [...prev, ...newPreviews]);
   };
-  
+
   const removePhoto = (index) => {
-    // Remove from photos array
-    setPhotos(prev => prev.filter((_, i) => i !== index));
-    
-    // Revoke object URL to avoid memory leaks
-    URL.revokeObjectURL(previewImages[index].preview);
-    
-    // Remove from preview images
-    setPreviewImages(prev => prev.filter((_, i) => i !== index));
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
+    URL.revokeObjectURL(previewImages[index].url);
+    setPreviewImages((prev) => prev.filter((_, i) => i !== index));
   };
-  
+
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
-      toast.error('Geolocation is not supported by your browser');
+      toast.error("Geolocation is not supported by your browser");
       return;
     }
-    
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
         setCoordinates({
           lat: latitude.toFixed(6),
-          lng: longitude.toFixed(6)
+          lng: longitude.toFixed(6),
         });
         setUseCurrentLocation(true);
-        toast.success('Current location detected');
+        toast.success("Location detected successfully");
       },
       (error) => {
-        console.error('Error getting location:', error);
-        toast.error('Failed to get your current location');
+        console.error("Error getting location:", error);
+        toast.error("Failed to get your location");
         setUseCurrentLocation(false);
       }
     );
   };
-  
+
+  const nextStep = () => {
+    setCurrentStep((prev) => Math.min(prev + 1, formSteps.length));
+  };
+
+  const prevStep = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
+  };
+
+  const onSubmit = async (data) => {
+    try {
+      setLoading(true);
+
+      if (!data.title || !data.description || !data.category) {
+        toast.error("Please fill in all required fields");
+        return;
+      }
+
+      if (!coordinates.lat || !coordinates.lng) {
+        toast.error("Please select a location on the map");
+        return;
+      }
+
+      const formData = new FormData();
+
+      Object.keys(data).forEach((key) => {
+        if (key !== "media" && key !== "photos") {
+          formData.append(key, data[key]);
+        }
+      });
+
+      const locationData = {
+        type: "Point",
+        coordinates: [parseFloat(coordinates.lng), parseFloat(coordinates.lat)],
+        address: {
+          street: data.street || "",
+          city: data.city || "",
+          state: data.state || "",
+          country: data.country || "",
+          zipCode: data.zipCode || "",
+        },
+        mangroveArea: data.mangroveArea || "",
+        nearestLandmark: data.nearestLandmark || "",
+      };
+      formData.append("location", JSON.stringify(locationData));
+
+      photos.forEach((photo, index) => {
+        formData.append("media", photo);
+        if (data[`mediaCaption_${index}`]) {
+          formData.append(
+            `mediaCaption_${index}`,
+            data[`mediaCaption_${index}`]
+          );
+        }
+      });
+
+      const response = await reportsAPI.submitReport(formData);
+      toast.success("Report submitted successfully!");
+      navigate("/reports");
+    } catch (error) {
+      console.error("Error submitting report:", error);
+      toast.error("Failed to submit report. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderFormStep = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="space-y-6"
+          >
+            <div>
+              <label
+                htmlFor="title"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Report Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="title"
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400"
+                placeholder="E.g., Illegal mangrove cutting at Henderson Bay"
+                {...register("title", { required: "Title is required" })}
+              />
+              {errors.title && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.title.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label
+                htmlFor="category"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Incident Category <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="category"
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400"
+                {...register("category", { required: "Category is required" })}
+              >
+                <option value="">Select a category</option>
+                <option value="illegal_cutting">Illegal Cutting</option>
+                <option value="land_reclamation">Land Reclamation</option>
+                <option value="pollution">Pollution</option>
+                <option value="construction">Construction</option>
+                <option value="natural_damage">Natural Damage</option>
+                <option value="other">Other</option>
+              </select>
+              {errors.category && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.category.message}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label
+                htmlFor="description"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Detailed Description <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                id="description"
+                rows="4"
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400"
+                placeholder="Please provide a detailed description of what you observed..."
+                {...register("description", {
+                  required: "Description is required",
+                })}
+              />
+              {errors.description && (
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.description.message}
+                </p>
+              )}
+            </div>
+          </motion.div>
+        );
+
+      case 2:
+        return (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="space-y-6"
+          >
+            <div className="bg-teal-50 dark:bg-teal-900/30 p-4 rounded-lg flex items-start gap-3">
+              <MapPin className="w-5 h-5 text-teal-600 dark:text-teal-400 mt-0.5" />
+              <div>
+                <h3 className="text-sm font-medium text-teal-800 dark:text-teal-300">
+                  Location Details
+                </h3>
+                <p className="text-sm text-teal-600 dark:text-teal-400 mt-1">
+                  Please provide accurate location information to help us
+                  identify and address the issue effectively.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <button
+                type="button"
+                onClick={getCurrentLocation}
+                className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-800 transition-colors"
+              >
+                <Crosshair className="w-4 h-4" />
+                Use Current Location
+              </button>
+
+              <div>
+                <label
+                  htmlFor="mangroveArea"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Mangrove Area Name
+                </label>
+                <input
+                  type="text"
+                  id="mangroveArea"
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                  placeholder="E.g., Henderson Bay Mangroves"
+                  {...register("mangroveArea")}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label
+                  htmlFor="latitude"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Latitude
+                </label>
+                <input
+                  type="text"
+                  id="latitude"
+                  value={coordinates.lat}
+                  onChange={(e) =>
+                    setCoordinates((prev) => ({ ...prev, lat: e.target.value }))
+                  }
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                  placeholder="Enter latitude"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="longitude"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                >
+                  Longitude
+                </label>
+                <input
+                  type="text"
+                  id="longitude"
+                  value={coordinates.lng}
+                  onChange={(e) =>
+                    setCoordinates((prev) => ({ ...prev, lng: e.target.value }))
+                  }
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                  placeholder="Enter longitude"
+                />
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 3:
+        return (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="space-y-6"
+          >
+            <div className="bg-teal-50 dark:bg-teal-900/30 p-4 rounded-lg flex items-start gap-3">
+              <Camera className="w-5 h-5 text-teal-600 dark:text-teal-400 mt-0.5" />
+              <div>
+                <h3 className="text-sm font-medium text-teal-800 dark:text-teal-300">
+                  Evidence & Media
+                </h3>
+                <p className="text-sm text-teal-600 dark:text-teal-400 mt-1">
+                  Upload photos or videos to document the incident. This will
+                  help verify and assess the situation.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <label className="block">
+                <span className="sr-only">Choose files</span>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,video/*"
+                  onChange={handlePhotoSelect}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 dark:file:bg-teal-900 dark:file:text-teal-300"
+                />
+              </label>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {previewImages.map((image, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={image.url}
+                      alt={`Preview ${index + 1}`}
+                      className="w-full h-48 object-cover rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(index)}
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    <input
+                      type="text"
+                      placeholder="Add a caption..."
+                      {...register(`mediaCaption_${index}`)}
+                      className="absolute bottom-2 left-2 right-2 px-2 py-1 text-sm bg-white/80 dark:bg-black/80 rounded"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        );
+
+      case 4:
+        return (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="space-y-6"
+          >
+            <div>
+              <label
+                htmlFor="severity"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Incident Severity
+              </label>
+              <select
+                id="severity"
+                {...register("severity")}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="estimatedArea"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Estimated Affected Area (if applicable)
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  type="number"
+                  id="estimatedArea"
+                  {...register("estimatedArea.value")}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                  placeholder="Enter value"
+                />
+                <select
+                  {...register("estimatedArea.unit")}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                >
+                  <option value="sq_meters">Square Meters</option>
+                  <option value="sq_kilometers">Square Kilometers</option>
+                  <option value="hectares">Hectares</option>
+                  <option value="acres">Acres</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="tags"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
+                Tags
+              </label>
+              <input
+                type="text"
+                id="tags"
+                {...register("tags")}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                placeholder="Enter tags separated by commas"
+              />
+            </div>
+          </motion.div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center mb-6">
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-green-50 dark:from-gray-900 dark:to-gray-800 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="flex items-center mb-8">
           <button
-            onClick={() => navigate('/reports')}
-            className="mr-4 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            onClick={() => navigate("/reports")}
+            className="mr-4 p-2 rounded-full bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all"
             aria-label="Go back"
           >
-            <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+            <ArrowLeft className="h-5 w-5 text-teal-600 dark:text-teal-400" />
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Submit Report</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <Leaf className="h-8 w-8 text-teal-600 dark:text-teal-400" />
+              Submit Report
+            </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Report a new incident or threat to mangrove ecosystems
+              Help protect mangrove ecosystems by reporting incidents
             </p>
           </div>
         </div>
-        
-        <div className="card">
-          <div className="p-6">
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Incident Details</h2>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label htmlFor="title" className="form-label">
-                      Title <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      id="title"
-                      type="text"
-                      className={`form-input w-full ${errors.title ? 'border-red-500' : ''}`}
-                      placeholder="Provide a clear, descriptive title"
-                      {...register('title', { 
-                        required: 'Title is required',
-                        maxLength: { value: 200, message: 'Title cannot exceed 200 characters' }
-                      })}
+
+        {/* Progress Steps */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center">
+            {formSteps.map((step) => (
+              <motion.div
+                key={step.id}
+                className={`flex-1 relative ${
+                  step.id === currentStep
+                    ? "text-teal-600 dark:text-teal-400"
+                    : step.id < currentStep
+                    ? "text-gray-600 dark:text-gray-400"
+                    : "text-gray-400 dark:text-gray-600"
+                }`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: step.id * 0.1 }}
+              >
+                <div className="flex items-center justify-center">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      step.id === currentStep
+                        ? "bg-teal-100 dark:bg-teal-900"
+                        : step.id < currentStep
+                        ? "bg-teal-600 dark:bg-teal-700"
+                        : "bg-gray-200 dark:bg-gray-700"
+                    }`}
+                  >
+                    <step.icon className="w-5 h-5" />
+                  </div>
+                  {step.id !== formSteps.length && (
+                    <div
+                      className={`flex-1 h-1 mx-4 ${
+                        step.id < currentStep
+                          ? "bg-teal-600 dark:bg-teal-700"
+                          : "bg-gray-200 dark:bg-gray-700"
+                      }`}
                     />
-                    {errors.title && (
-                      <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="description" className="form-label">
-                      Description <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      id="description"
-                      rows="4"
-                      className={`form-input w-full ${errors.description ? 'border-red-500' : ''}`}
-                      placeholder="Provide a detailed description of what you observed"
-                      {...register('description', { 
-                        required: 'Description is required',
-                        maxLength: { value: 2000, message: 'Description cannot exceed 2000 characters' }
-                      })}
-                    ></textarea>
-                    {errors.description && (
-                      <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>
-                    )}
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="category" className="form-label">
-                        Category <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        id="category"
-                        className={`form-select w-full ${errors.category ? 'border-red-500' : ''}`}
-                        {...register('category', { required: 'Category is required' })}
-                      >
-                        <option value="">Select a category</option>
-                        <option value="illegal_cutting">Illegal Cutting</option>
-                        <option value="land_reclamation">Land Reclamation</option>
-                        <option value="pollution">Pollution</option>
-                        <option value="dumping">Dumping</option>
-                        <option value="construction">Construction</option>
-                        <option value="other">Other</option>
-                      </select>
-                      {errors.category && (
-                        <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>
-                      )}
-                    </div>
-                    
-                    {category === 'other' && (
-                      <div>
-                        <label htmlFor="subCategory" className="form-label">
-                          Specify Category <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          id="subCategory"
-                          type="text"
-                          className={`form-input w-full ${errors.subCategory ? 'border-red-500' : ''}`}
-                          placeholder="Specify the category"
-                          {...register('subCategory', { 
-                            required: category === 'other' ? 'Please specify the category' : false
-                          })}
-                        />
-                        {errors.subCategory && (
-                          <p className="text-red-500 text-sm mt-1">{errors.subCategory.message}</p>
-                        )}
-                      </div>
-                    )}
-                    
-                    <div>
-                      <label htmlFor="severity" className="form-label">
-                        Severity <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        id="severity"
-                        className={`form-select w-full ${errors.severity ? 'border-red-500' : ''}`}
-                        {...register('severity', { required: 'Severity is required' })}
-                      >
-                        <option value="">Select severity level</option>
-                        <option value="low">Low - Minor impact</option>
-                        <option value="medium">Medium - Moderate impact</option>
-                        <option value="high">High - Significant impact</option>
-                        <option value="critical">Critical - Severe impact</option>
-                      </select>
-                      {errors.severity && (
-                        <p className="text-red-500 text-sm mt-1">{errors.severity.message}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Location Information</h2>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-4 mb-4">
-                    <button
-                      type="button"
-                      className="btn-outline flex items-center space-x-2"
-                      onClick={getCurrentLocation}
-                    >
-                      <MapPin className="h-4 w-4" />
-                      <span>Use Current Location</span>
-                    </button>
-                    
-                    {useCurrentLocation && (
-                      <div className="text-sm text-green-600 dark:text-green-400">
-                        Current location set
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="lat" className="form-label">
-                        Latitude <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        id="lat"
-                        type="text"
-                        className={`form-input w-full ${errors.lat ? 'border-red-500' : ''}`}
-                        placeholder="e.g., 25.276987"
-                        value={coordinates.lat}
-                        onChange={(e) => setCoordinates(prev => ({ ...prev, lat: e.target.value }))}
-                        {...register('lat', { 
-                          required: 'Latitude is required',
-                          pattern: {
-                            value: /^-?([1-8]?[0-9](\.[0-9]+)?|90(\.0+)?)$/,
-                            message: 'Please enter a valid latitude (-90 to 90)'
-                          }
-                        })}
-                      />
-                      {errors.lat && (
-                        <p className="text-red-500 text-sm mt-1">{errors.lat.message}</p>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="lng" className="form-label">
-                        Longitude <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        id="lng"
-                        type="text"
-                        className={`form-input w-full ${errors.lng ? 'border-red-500' : ''}`}
-                        placeholder="e.g., 55.296249"
-                        value={coordinates.lng}
-                        onChange={(e) => setCoordinates(prev => ({ ...prev, lng: e.target.value }))}
-                        {...register('lng', { 
-                          required: 'Longitude is required',
-                          pattern: {
-                            value: /^-?((1[0-7]|[1-9])?[0-9](\.[0-9]+)?|180(\.0+)?)$/,
-                            message: 'Please enter a valid longitude (-180 to 180)'
-                          }
-                        })}
-                      />
-                      {errors.lng && (
-                        <p className="text-red-500 text-sm mt-1">{errors.lng.message}</p>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="mangroveArea" className="form-label">
-                      Mangrove Area Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      id="mangroveArea"
-                      type="text"
-                      className={`form-input w-full ${errors.mangroveArea ? 'border-red-500' : ''}`}
-                      placeholder="e.g., Eastern Mangrove Park"
-                      {...register('mangroveArea', { required: 'Mangrove area name is required' })}
-                    />
-                    {errors.mangroveArea && (
-                      <p className="text-red-500 text-sm mt-1">{errors.mangroveArea.message}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="nearestLandmark" className="form-label">
-                      Nearest Landmark
-                    </label>
-                    <input
-                      id="nearestLandmark"
-                      type="text"
-                      className="form-input w-full"
-                      placeholder="e.g., Near Fishing Dock, 500m east of Beach Resort"
-                      {...register('nearestLandmark')}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="city" className="form-label">
-                        City/Town <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        id="city"
-                        type="text"
-                        className={`form-input w-full ${errors.city ? 'border-red-500' : ''}`}
-                        {...register('city', { required: 'City is required' })}
-                      />
-                      {errors.city && (
-                        <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="state" className="form-label">
-                        State/Province <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        id="state"
-                        type="text"
-                        className={`form-input w-full ${errors.state ? 'border-red-500' : ''}`}
-                        {...register('state', { required: 'State is required' })}
-                      />
-                      {errors.state && (
-                        <p className="text-red-500 text-sm mt-1">{errors.state.message}</p>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="country" className="form-label">
-                        Country <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        id="country"
-                        type="text"
-                        className={`form-input w-full ${errors.country ? 'border-red-500' : ''}`}
-                        {...register('country', { required: 'Country is required' })}
-                      />
-                      {errors.country && (
-                        <p className="text-red-500 text-sm mt-1">{errors.country.message}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mb-8">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Photos & Evidence</h2>
-                
-                <div className="space-y-4">
-                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-6 text-center">
-                    <div className="space-y-2">
-                      <div className="flex justify-center">
-                        <Image className="h-12 w-12 text-gray-400" />
-                      </div>
-                      <div className="text-gray-600 dark:text-gray-400">
-                        <p className="text-sm">Upload photos as evidence (maximum 5 photos)</p>
-                        <p className="text-xs mt-1">Accepted formats: JPG, PNG, HEIC (max 10MB each)</p>
-                      </div>
-                      <div>
-                        <label
-                          htmlFor="photos"
-                          className="btn-outline mt-2 inline-flex items-center space-x-2 cursor-pointer"
-                        >
-                          <Upload className="h-4 w-4" />
-                          <span>Select Photos</span>
-                          <input
-                            id="photos"
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            className="hidden"
-                            onChange={handlePhotoUpload}
-                            disabled={photos.length >= 5}
-                          />
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {previewImages.length > 0 && (
-                    <div className="mt-4">
-                      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Uploaded Photos ({previewImages.length}/5)
-                      </h3>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                        {previewImages.map((image, index) => (
-                          <div
-                            key={index}
-                            className="relative rounded-lg overflow-hidden group"
-                          >
-                            <img
-                              src={image.preview}
-                              alt={`Preview ${index + 1}`}
-                              className="h-24 w-full object-cover"
-                            />
-                            <button
-                              type="button"
-                              className="absolute top-1 right-1 p-1 bg-red-600 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={() => removePhoto(index)}
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
                   )}
                 </div>
-              </div>
-              
-              <div className="flex justify-end space-x-4">
+                <div className="text-center mt-2 text-sm font-medium">
+                  {step.title}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* Form Card */}
+        <motion.div
+          className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="p-8">
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <AnimatePresence mode="wait">{renderFormStep()}</AnimatePresence>
+
+              {/* Navigation Buttons */}
+              <div className="mt-8 flex justify-between">
                 <button
                   type="button"
-                  className="btn-outline"
-                  onClick={() => navigate('/reports')}
-                  disabled={loading}
+                  onClick={() => navigate("/reports")}
+                  className="px-6 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="btn-primary flex items-center space-x-2"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                      <span>Submitting...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4" />
-                      <span>Submit Report</span>
-                    </>
+                <div className="flex gap-4">
+                  {currentStep > 1 && (
+                    <button
+                      type="button"
+                      onClick={prevStep}
+                      className="px-6 py-2 rounded-lg bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-800 transition-colors"
+                    >
+                      Previous
+                    </button>
                   )}
-                </button>
+                  {currentStep < formSteps.length ? (
+                    <button
+                      type="button"
+                      onClick={nextStep}
+                      className="px-6 py-2 rounded-lg bg-teal-600 dark:bg-teal-500 text-white hover:bg-teal-700 dark:hover:bg-teal-400 transition-colors"
+                    >
+                      Next
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="px-6 py-2 rounded-lg bg-teal-600 dark:bg-teal-500 text-white hover:bg-teal-700 dark:hover:bg-teal-400 transition-colors disabled:opacity-50"
+                    >
+                      {loading ? "Submitting..." : "Submit Report"}
+                    </button>
+                  )}
+                </div>
               </div>
             </form>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

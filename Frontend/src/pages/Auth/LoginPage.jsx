@@ -4,15 +4,16 @@ import { useForm } from 'react-hook-form';
 import { useAuth } from '../../contexts/AuthContext';
 import { Eye, EyeOff, Mail, Lock, MapPin } from 'lucide-react';
 import LoadingSpinner from '../../components/UI/LoadingSpinner';
+import RateLimitIndicator from '../../components/UI/RateLimitIndicator';
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, rateLimitCountdown } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || '/dashboard';
+  const from = location.state?.from?.pathname || '/';
 
   const {
     register,
@@ -45,6 +46,9 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      {/* Rate Limit Indicator */}
+      <RateLimitIndicator countdown={rateLimitCountdown} />
+      
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-mangrove-500 rounded-xl flex items-center justify-center">
