@@ -383,46 +383,11 @@ const DashboardPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader
-        user={user}
         timeFilter={timeFilter}
         setTimeFilter={setTimeFilter}
         regionFilter={regionFilter}
         setRegionFilter={setRegionFilter}
       />
-
-      {/* Debug Info - Remove this after testing */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-          <h3 className="text-lg font-medium text-yellow-800">
-            🔧 Debug Info (Remove after testing)
-          </h3>
-          <div className="mt-2 text-sm text-yellow-700">
-            <p>
-              <strong>isAuthenticated:</strong>{" "}
-              {isAuthenticated ? "✅ Yes" : "❌ No"}
-            </p>
-            <p>
-              <strong>User:</strong>{" "}
-              {user
-                ? `${user.firstName} ${user.lastName} (${user.role})`
-                : "None"}
-            </p>
-            <p>
-              <strong>Loading:</strong> {isLoading ? "Yes" : "No"}
-            </p>
-            <p>
-              <strong>Error:</strong> {error || "None"}
-            </p>
-            <p>
-              <strong>Token:</strong>{" "}
-              {localStorage.getItem("token") ? "Present" : "Missing"}
-            </p>
-            <p>
-              <strong>Current Path:</strong> {window.location.pathname}
-            </p>
-          </div>
-        </div>
-      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Grid */}
