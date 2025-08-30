@@ -211,9 +211,43 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (userData) => {
-    console.log('🔐 Registration attempt started');
+    console.log('🔐 Registration attempt started', userData);
     dispatch({ type: 'AUTH_START' });
     try {
+      // Add more detailed error handling
+      if (!userData.role) {
+        console.error('🔐 No role provided in registration data');
+        toast.error('Please select a role');
+        dispatch({ 
+          type: 'AUTH_FAILURE', 
+          payload: 'No role selected' 
+        });
+        return { success: false, error: 'Please select a role' };
+      }
+      
+      // Check if the role is valid
+      const validRoles = [
+        'fisherman', 
+        'coastal_resident', 
+        'citizen_scientist', 
+        'ngo_admin', 
+        'government_officer',
+        'researcher',
+        'local_guide',
+        'public_visitor'
+      ];
+      
+      if (!validRoles.includes(userData.role)) {
+        console.error('🔐 Invalid role selected:', userData.role);
+        toast.error('Invalid role selected');
+        dispatch({ 
+          type: 'AUTH_FAILURE', 
+          payload: 'Invalid role selected' 
+        });
+        return { success: false, error: 'Invalid role selected' };
+      }
+      
+      console.log('🔐 Sending registration request with role:', userData.role);
       const response = await authAPI.register(userData);
       console.log('🔐 Registration response:', response.data);
       
@@ -245,6 +279,21 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('🔐 Registration error:', error);
+      
+      // Enhanced error logging
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error('🔐 Response data:', error.response.data);
+        console.error('🔐 Response status:', error.response.status);
+        console.error('🔐 Response headers:', error.response.headers);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error('🔐 No response received:', error.request);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error('🔐 Request setup error:', error.message);
+      }
       
       // Handle specific HTTP status codes
       if (error.response?.status === 429) {
