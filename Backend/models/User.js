@@ -56,7 +56,47 @@ const userSchema = new mongoose.Schema({
     ],
     default: 'coastal_resident'
   },
+<<<<<<< HEAD
 
+=======
+  // Additional role-specific information
+  roleSpecificInfo: {
+    // For fishermen
+    boatNumber: String,
+    fishingArea: String,
+    
+    // For coastal residents
+    area: String,
+    
+    // For citizen scientists
+    expertise: String,
+    
+    // For NGO admins
+    ngoName: String,
+    designation: String,
+    
+    // For government officers
+    department: String,
+    jurisdiction: String,
+    
+    // For researchers
+    institution: String,
+    researchArea: String,
+    
+    // For local guides
+    experienceYears: Number,
+    // area is already defined for coastal residents
+    expertise: String, // Will store comma-separated expertise areas
+    
+    // Legacy fields (keeping for backward compatibility)
+    fishingLicenseNo: String,         
+    organizationName: String,         
+    governmentId: String,            
+    researchInstitution: String,     
+    localArea: String,               
+    yearsOfExperience: Number        
+  },
+>>>>>>> baa80a589b1a1645c35d5037d9382e7418b2bb9b
   permissions: [{
     type: String,
     enum: [

@@ -21,6 +21,7 @@ import { reportsAPI } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
+import MapSelector from "../../components/UI/MapSelector";
 
 const SubmitReportPage = () => {
   const { state: authState } = useAuth();
@@ -114,24 +115,37 @@ const SubmitReportPage = () => {
 
       const formData = new FormData();
 
-      Object.keys(data).forEach((key) => {
-        if (key !== "media" && key !== "photos") {
-          formData.append(key, data[key]);
-        }
-      });
+      // Add required fields
+      formData.append("title", data.title);
+      formData.append("description", data.description);
+      formData.append("category", data.category);
 
+      // Add optional fields if present
+      if (data.severity) {
+        formData.append("severity", data.severity);
+      }
+      if (data.subCategory) {
+        formData.append("subCategory", data.subCategory);
+      }
+
+      // Add location data in the exact format expected by backend
+      // Validate coordinates
+      const longitude = parseFloat(coordinates.lng);
+      const latitude = parseFloat(coordinates.lat);
+
+      if (isNaN(longitude) || longitude < -180 || longitude > 180) {
+        toast.error("Invalid longitude! Must be between -180 and 180");
+        return;
+      }
+      if (isNaN(latitude) || latitude < -90 || latitude > 90) {
+        toast.error("Invalid latitude! Must be between -90 and 90");
+        return;
+      }
+
+      // Create GeoJSON Point
       const locationData = {
         type: "Point",
-        coordinates: [parseFloat(coordinates.lng), parseFloat(coordinates.lat)],
-        address: {
-          street: data.street || "",
-          city: data.city || "",
-          state: data.state || "",
-          country: data.country || "",
-          zipCode: data.zipCode || "",
-        },
-        mangroveArea: data.mangroveArea || "",
-        nearestLandmark: data.nearestLandmark || "",
+        coordinates: [longitude, latitude], // MongoDB expects [longitude, latitude]
       };
       formData.append("location", JSON.stringify(locationData));
 
@@ -145,9 +159,9 @@ const SubmitReportPage = () => {
         }
       });
 
-      const response = await reportsAPI.submitReport(formData);
-      toast.success("Report submitted successfully!");
-      navigate("/reports");
+        const response = await reportsAPI.create(formData);
+        toast.success("Report submitted successfully!");
+        navigate("/reports");
     } catch (error) {
       console.error("Error submitting report:", error);
       toast.error("Failed to submit report. Please try again.");
@@ -260,15 +274,34 @@ const SubmitReportPage = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <button
-                type="button"
-                onClick={getCurrentLocation}
-                className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 hover:bg-teal-200 dark:hover:bg-teal-800 transition-colors"
-              >
-                <Crosshair className="w-4 h-4" />
-                Use Current Location
-              </button>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={getCurrentLocation}
+                  className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 flex items-center gap-2"
+                >
+                  <Crosshair className="w-4 h-4" />
+                  Use Current Location
+                </button>
+                {coordinates.lat && coordinates.lng && (
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Selected: {coordinates.lat.toFixed(6)},{" "}
+                    {coordinates.lng.toFixed(6)}
+                  </div>
+                )}
+              </div>
+
+              <MapSelector
+                coordinates={coordinates}
+                onLocationSelect={(location) => {
+                  setCoordinates({
+                    lat: location.lat,
+                    lng: location.lng,
+                  });
+                  toast.success("Location selected!");
+                }}
+              />
 
               <div>
                 <label
@@ -312,18 +345,31 @@ const SubmitReportPage = () => {
                   htmlFor="longitude"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                 >
-                  Longitude
+                  Longitude (between -180 and 180)
                 </label>
-                <input
-                  type="text"
-                  id="longitude"
-                  value={coordinates.lng}
-                  onChange={(e) =>
-                    setCoordinates((prev) => ({ ...prev, lng: e.target.value }))
-                  }
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
-                  placeholder="Enter longitude"
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    step="any"
+                    id="longitude"
+                    value={coordinates.lng}
+                    onChange={(e) =>
+                      setCoordinates((prev) => ({
+                        ...prev,
+                        lng: e.target.value,
+                      }))
+                    }
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700"
+                    placeholder="E.g., 72.8777 for Mumbai"
+                  />
+                  <button
+                    type="button"
+                    onClick={getCurrentLocation}
+                    className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+                  >
+                    Get Current Location
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>

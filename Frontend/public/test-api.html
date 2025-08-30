@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Test Reports API</title>
+    <style>
+        body {
+            padding: 20px;
+            font-family: Arial;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Test Reports API</h2>
+
+    <div class="form-group">
+        <h3>1. Login First</h3>
+        <input type="email" id="email" placeholder="Email" value="test@example.com">
+        <input type="password" id="password" placeholder="Password" value="password123">
+        <button onclick="login()">Login</button>
+        <pre id="loginResponse"></pre>
+    </div>
+
+    <div class="form-group">
+        <h3>2. Submit Report</h3>
+        <input type="text" id="title" placeholder="Title">
+        <textarea id="description" placeholder="Description"></textarea>
+        <select id="category">
+            <option value="illegal_cutting">Illegal Cutting</option>
+            <option value="land_reclamation">Land Reclamation</option>
+            <option value="pollution">Pollution</option>
+            <option value="construction">Construction</option>
+            <option value="natural_damage">Natural Damage</option>
+            <option value="other">Other</option>
+        </select>
+        <input type="file" id="media" multiple>
+        <div>
+            <label>Location:</label>
+            <input type="number" id="longitude" placeholder="Longitude (e.g., 72.8777)" step="any">
+            <input type="number" id="latitude" placeholder="Latitude (e.g., 19.0760)" step="any">
+        </div>
+        <button onclick="submitReport()">Submit Report</button>
+        <pre id="reportResponse"></pre>
+    </div>
+
+    <script>
+        let token = '';
+
+        async function login() {
+            try {
+                const response = await fetch('http://localhost:5003/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: document.getElementById('email').value,
+                        password: document.getElementById('password').value
+                    })
+                });
+                const data = await response.json();
+                document.getElementById('loginResponse').textContent = JSON.stringify(data, null, 2);
+                if (data.token) {
+                    token = data.token;
+                    alert('Login successful! You can now submit a report.');
+                }
+            } catch (error) {
+                document.getElementById('loginResponse').textContent = error.message;
+            }
+        }
+
+        async function submitReport() {
+            try {
+                // Check if we have a token
+                if (!token) {
+                    alert('Please login first!');
+                    return;
+                }
+
+                const formData = new FormData();
+
+                // Basic required fields with logging
+                const title = document.getElementById('title').value;
+                const description = document.getElementById('description').value;
+
+                console.log('Submitting with data:', {
+                    title,
+                    description,
+                    token: token ? 'Present' : 'Missing'
+                });
+
+                // Validate length requirements
+                if (title.length < 5 || title.length > 200) {
+                    alert('Title must be between 5 and 200 characters');
+                    return;
+                }
+                if (description.length < 20 || description.length > 2000) {
+                    alert('Description must be between 20 and 2000 characters');
+                    return;
+                }
+
+                formData.append('title', title);
+                formData.append('description', description);
+                formData.append('category', document.getElementById('category').value);
+
+                // Add incident date (required)
+                formData.append('incidentDate', new Date().toISOString());
+
+                // Handle location
+                const longitude = parseFloat(document.getElementById('longitude').value);
+                const latitude = parseFloat(document.getElementById('latitude').value);
+
+                if (isNaN(longitude) || longitude < -180 || longitude > 180) {
+                    alert('Invalid longitude! Must be between -180 and 180');
+                    return;
+                }
+                if (isNaN(latitude) || latitude < -90 || latitude > 90) {
+                    alert('Invalid latitude! Must be between -90 and 90');
+                    return;
+                }
+
+                const location = {
+                    type: 'Point',
+                    coordinates: [longitude, latitude]
+                };
+                formData.append('location', JSON.stringify(location));
+
+                // Handle files
+                const mediaFiles = document.getElementById('media').files;
+                for (let i = 0; i < mediaFiles.length; i++) {
+                    formData.append('media', mediaFiles[i]);
+                }
+
+                // Add default severity if not specified
+                formData.append('severity', 'medium');
+
+                // Log the FormData contents
+                for (let pair of formData.entries()) {
+                    console.log(pair[0] + ': ' + pair[1]);
+                }
+
+                console.log('Sending request to:', 'http://localhost:5003/api/reports');
+
+                const response = await fetch('http://localhost:5003/api/reports', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                console.log('Response:', data);
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${data.message || response.statusText}`);
+                }
+
+                document.getElementById('reportResponse').textContent = JSON.stringify(data, null, 2);
+                if (data.success) {
+                    alert('Report submitted successfully!');
+                }
+            } catch (error) {
+                console.error('Error details:', error);
+                document.getElementById('reportResponse').textContent = 'Error: ' + error.message;
+                alert('Error submitting report: ' + error.message);
+            }
+        }
+    </script>
+</body>
+
+</html>
