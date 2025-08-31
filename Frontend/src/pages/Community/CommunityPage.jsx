@@ -156,14 +156,17 @@ const CommunityPage = () => {
     return () => clearInterval(interval);
   }, [autoRefresh, fetchOverview]);
 
-  // Effect to refetch resources when filters change
+  // Handle search and filter changes with debounced fetch
   useEffect(() => {
-    if (!loading) {
-      fetchResources();
-    }
-  }, [fetchResources, loading]);
+    const timer = setTimeout(() => {
+      if (!loading) {
+        fetchResources();
+      }
+    }, 500); // Debounce for 500ms
 
-  // Handle search and filter changes
+    return () => clearTimeout(timer);
+  }, [searchTerm, selectedCategory, selectedDifficulty, selectedLanguage, loading]);
+
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
@@ -228,8 +231,8 @@ const CommunityPage = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center ${
                   activeTab === tab.id
-                    ? 'border-green-500 text-green-600 dark:text-green-400'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                    ? 'border-green-500 text-green-500 font-semibold'
+                    : 'border-transparent text-gray-600 hover:text-green-500 hover:border-green-300'
                 }`}
               >
                 <Icon className="h-4 w-4 mr-2" />
@@ -319,7 +322,7 @@ const CommunityPage = () => {
               placeholder="Search resources..."
               value={searchTerm}
               onChange={handleSearchChange}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-400 focus:border-green-400 outline-none"
             />
           </div>
 
@@ -518,22 +521,22 @@ const CommunityPage = () => {
       )}
 
       {/* Call to Action */}
-      <div className="mt-8 bg-gradient-to-r from-green-500 to-teal-600 rounded-lg shadow-lg p-8 text-center text-white">
-        <h2 className="text-2xl font-bold mb-4">Join Our Community</h2>
-        <p className="text-green-100 mb-6 max-w-2xl mx-auto">
+      <div className="mt-8 bg-gradient-to-r from-emerald-400 to-green-500 rounded-lg shadow-lg p-8 text-center text-white">
+        <h2 className="text-3xl font-bold mb-4">Join Our Community</h2>
+        <p className="text-white opacity-90 mb-6 max-w-2xl mx-auto">
           Connect with fellow conservationists, share your experiences, and
           contribute to mangrove protection efforts
         </p>
         <div className="flex flex-wrap justify-center gap-4">
           <a
             href="/reports/submit"
-            className="bg-white text-green-600 px-6 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+            className="bg-white text-green-500 px-8 py-3 rounded-full font-semibold hover:bg-opacity-90 transition-colors"
           >
             Submit a Report
           </a>
           <a
             href="/community/events"
-            className="border-2 border-white text-white px-6 py-2 rounded-lg font-medium hover:bg-white hover:text-green-600 transition-colors"
+            className="bg-green-500 border-2 border-white text-white px-8 py-3 rounded-full font-semibold hover:bg-green-600 transition-colors"
           >
             Join an Event
           </a>
