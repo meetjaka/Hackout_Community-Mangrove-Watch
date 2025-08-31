@@ -199,7 +199,7 @@ const ProfilePage = () => {
 
         <div className="card mb-6 overflow-hidden">
           {/* Profile Header */}
-          <div className="bg-gradient-to-r from-primary-500 to-mangrove-500 h-32 relative"></div>
+          <div className="bg-primary-500 h-32 relative"></div>
 
           <div className="p-6 relative">
             <div className="absolute -top-16 left-6 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden bg-gray-200 dark:bg-gray-700 h-32 w-32">

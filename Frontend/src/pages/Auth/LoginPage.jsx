@@ -50,15 +50,15 @@ const LoginPage = () => {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Medium bubbles */}
         <div className="absolute top-20 left-20 w-48 h-48 bg-primary-400/8 rounded-full blur-2xl"></div>
-        <div className="absolute bottom-20 right-20 w-48 h-48 bg-mangrove-400/8 rounded-full blur-2xl"></div>
+        <div className="absolute bottom-20 right-20 w-48 h-48 bg-primary-400/8 rounded-full blur-2xl"></div>
         
         {/* Small floating bubbles */}
         <div className="absolute top-1/4 left-1/4 w-24 h-24 bg-primary-300/6 rounded-full blur-xl animate-pulse"></div>
-        <div className="absolute top-3/4 right-1/4 w-20 h-20 bg-mangrove-400/6 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-3/4 right-1/4 w-20 h-20 bg-primary-400/6 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s' }}></div>
         <div className="absolute top-1/2 left-1/2 w-16 h-16 bg-primary-200/8 rounded-full blur-lg animate-pulse" style={{ animationDelay: '2s' }}></div>
         
         {/* Additional accent bubbles */}
-        <div className="absolute top-1/3 right-1/3 w-32 h-32 bg-mangrove-400/5 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+        <div className="absolute top-1/3 right-1/3 w-32 h-32 bg-primary-400/5 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '0.5s' }}></div>
         <div className="absolute bottom-1/3 left-1/3 w-28 h-28 bg-primary-400/5 rounded-full blur-2xl animate-pulse" style={{ animationDelay: '1.5s' }}></div>
       </div>
       
@@ -215,7 +215,7 @@ const LoginPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center items-center px-6 py-4 bg-gradient-to-r from-primary-600 to-mangrove-600 hover:from-primary-700 hover:to-mangrove-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full flex justify-center items-center px-6 py-4 bg-primary-600 hover:bg-primary-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
                 {isLoading ? (
                   <>

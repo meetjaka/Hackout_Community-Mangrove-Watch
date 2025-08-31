@@ -29,8 +29,8 @@ const HomePage = () => {
       icon: Shield,
       title: 'AI Validation',
       description: 'Advanced AI algorithms validate reports and cross-reference with satellite imagery for accuracy.',
-      color: 'text-mangrove-400',
-      bgColor: 'bg-mangrove-500/10',
+      color: 'text-primary-400',
+      bgColor: 'bg-primary-500/10',
     },
     {
       icon: Users,
@@ -43,8 +43,8 @@ const HomePage = () => {
       icon: BarChart3,
       title: 'Real-time Analytics',
       description: 'Access comprehensive dashboards and analytics to track conservation efforts and trends.',
-      color: 'text-mangrove-400',
-      bgColor: 'bg-mangrove-500/10',
+      color: 'text-primary-400',
+      bgColor: 'bg-primary-500/10',
     },
     {
       icon: Trophy,
@@ -57,8 +57,8 @@ const HomePage = () => {
       icon: Globe,
       title: 'Global Impact',
       description: 'Join a worldwide network of citizen scientists protecting mangrove ecosystems.',
-      color: 'text-mangrove-400',
-      bgColor: 'bg-mangrove-500/10',
+      color: 'text-primary-400',
+      bgColor: 'bg-primary-500/10',
     },
   ];
 
@@ -102,12 +102,12 @@ const HomePage = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               {isAuthenticated ? (
-                <Link to="/dashboard" className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out">
+                <Link to="/dashboard" className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out">
                   Go to Dashboard
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Link>
               ) : (
-                <Link to="/register" className="inline-flex items-center px-10 py-4 text-lg font-bold text-white bg-gradient-to-r from-primary-600 to-mangrove-600 hover:from-primary-700 hover:to-mangrove-700 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out border-2 border-transparent hover:border-primary-400">
+                <Link to="/register" className="inline-flex items-center px-10 py-4 text-lg font-bold text-white bg-primary-600 hover:bg-primary-700 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out border-2 border-transparent hover:border-primary-400">
                   Register Now
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Link>
@@ -117,7 +117,7 @@ const HomePage = () => {
         </div>
         
         {/* Floating elements */}
-        <div className="absolute top-20 left-10 w-20 h-20 bg-mangrove-200 rounded-full opacity-20 animate-float"></div>
+        <div className="absolute top-20 left-10 w-20 h-20 bg-primary-200 rounded-full opacity-20 animate-float"></div>
         <div className="absolute bottom-20 right-10 w-32 h-32 bg-primary-200 rounded-full opacity-20 animate-float" style={{ animationDelay: '1s' }}></div>
       </section>
 
@@ -160,7 +160,7 @@ const HomePage = () => {
         {/* Background decorative elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-mangrove-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl"></div>
           <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-primary-400/5 rounded-full blur-2xl"></div>
         </div>
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8 relative z-10">
@@ -172,13 +172,13 @@ const HomePage = () => {
           </p>
           
           {isAuthenticated ? (
-            <Link to="/reports/submit" className="inline-flex items-center px-8 py-4 text-lg font-bold bg-gradient-to-r from-primary-600 to-mangrove-600 hover:from-primary-700 hover:to-mangrove-700 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out border-2 border-transparent hover:border-primary-400/30">
+            <Link to="/reports/submit" className="inline-flex items-center px-8 py-4 text-lg font-bold bg-primary-600 hover:bg-primary-700 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out border-2 border-transparent hover:border-primary-400/30">
               Submit Your First Report
               <ArrowRight className="w-5 h-5 ml-2" />
             </Link>
           ) : (
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/register" className="inline-flex items-center px-8 py-4 text-lg font-bold bg-gradient-to-r from-primary-600 to-mangrove-600 hover:from-primary-700 hover:to-mangrove-700 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out border-2 border-transparent hover:border-primary-400/30">
+              <Link to="/register" className="inline-flex items-center px-8 py-4 text-lg font-bold bg-primary-600 hover:bg-primary-700 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 ease-in-out border-2 border-transparent hover:border-primary-400/30">
                 Register
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Link>
