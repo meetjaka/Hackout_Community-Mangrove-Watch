@@ -12,11 +12,11 @@ const DashboardHeader = ({
         {/* Filters */}
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
-            <label className="text-sm font-medium text-gray-700">Time:</label>
+            <label className="text-sm font-medium text-gray-300">Time:</label>
             <select
               value={timeFilter}
               onChange={(e) => setTimeFilter(e.target.value)}
-              className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-1 border border-gray-600 rounded-md text-sm bg-gray-700 text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors duration-200"
             >
               <option value="7d">Last 7 Days</option>
               <option value="30d">Last 30 Days</option>
@@ -26,11 +26,11 @@ const DashboardHeader = ({
           </div>
 
           <div className="flex items-center space-x-2">
-            <label className="text-sm font-medium text-gray-700">Region:</label>
+            <label className="text-sm font-medium text-gray-300">Region:</label>
             <select
               value={regionFilter}
               onChange={(e) => setRegionFilter(e.target.value)}
-              className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-1 border border-gray-600 rounded-md text-sm bg-gray-700 text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors duration-200"
             >
               <option value="all">All Regions</option>
               <option value="north">North Coast</option>

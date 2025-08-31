@@ -337,10 +337,10 @@ const DashboardPage = () => {
   // Show loading state while authenticating
   if (!isAuthenticated || !user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-500 mx-auto"></div>
+          <p className="mt-4 text-gray-300">
             Please log in to view dashboard...
           </p>
         </div>
@@ -350,10 +350,10 @@ const DashboardPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-500 mx-auto"></div>
+          <p className="mt-4 text-gray-300">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -362,16 +362,16 @@ const DashboardPage = () => {
   // Only show error if we actually have an error and we're not loading
   if (error && !isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          <h2 className="text-2xl font-bold text-white mb-2">
             Error Loading Dashboard
           </h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <p className="text-gray-300 mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors duration-200"
           >
             Try Again
           </button>
@@ -381,7 +381,7 @@ const DashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-900">
       <DashboardHeader
         timeFilter={timeFilter}
         setTimeFilter={setTimeFilter}
@@ -397,20 +397,20 @@ const DashboardPage = () => {
             return (
               <div
                 key={stat.id}
-                className="bg-white rounded-lg shadow-sm p-6 border border-gray-200"
+                className="bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-700 hover:border-primary-500/50 transition-all duration-300 hover:shadow-primary-500/10"
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className="text-sm font-medium text-gray-300">
                       {stat.name}
                     </p>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="text-2xl font-bold text-white">
                       {stat.value}
                     </p>
                   </div>
-                  <div className={`p-3 rounded-full bg-${stat.color}-100`}>
+                  <div className="p-3 rounded-full bg-primary-500/20 border border-primary-500/30">
                     <IconComponent
-                      className={`h-6 w-6 text-${stat.color}-600`}
+                      className="h-6 w-6 text-primary-400"
                     />
                   </div>
                 </div>
@@ -418,13 +418,13 @@ const DashboardPage = () => {
                   <span
                     className={`text-sm font-medium ${
                       stat.changeType === "positive"
-                        ? "text-green-600"
-                        : "text-red-600"
+                        ? "text-green-400"
+                        : "text-red-400"
                     }`}
                   >
                     {stat.change}
                   </span>
-                  <span className="text-sm text-gray-500 ml-2">
+                  <span className="text-sm text-gray-400 ml-2">
                     from last month
                   </span>
                 </div>
@@ -436,9 +436,9 @@ const DashboardPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Recent Reports */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">
+            <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700">
+              <div className="px-6 py-4 border-b border-gray-700">
+                <h3 className="text-lg font-semibold text-white">
                   Recent Reports
                 </h3>
               </div>
@@ -448,7 +448,7 @@ const DashboardPage = () => {
                     {recentReports.map((report) => (
                       <div
                         key={report.id}
-                        className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg"
+                        className="flex items-start space-x-4 p-4 bg-gray-700 rounded-lg border border-gray-600 hover:border-primary-500/50 transition-all duration-300"
                       >
                         <div className="flex-shrink-0">
                           <img
@@ -459,33 +459,33 @@ const DashboardPage = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-gray-900 truncate">
+                            <p className="text-sm font-medium text-white truncate">
                               {report.title}
                             </p>
                             <span
                               className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                 report.status === "urgent"
-                                  ? "bg-red-100 text-red-800"
+                                  ? "bg-red-900/30 text-red-300 border border-red-700"
                                   : report.status === "validated"
-                                  ? "bg-green-100 text-green-800"
+                                  ? "bg-green-900/30 text-green-300 border border-green-700"
                                   : report.status === "investigating"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : "bg-gray-100 text-gray-800"
+                                  ? "bg-yellow-900/30 text-yellow-300 border border-yellow-700"
+                                  : "bg-gray-700 text-gray-300 border border-gray-600"
                               }`}
                             >
                               {report.status}
                             </span>
                           </div>
-                          <div className="mt-1 flex items-center text-sm text-gray-500">
+                          <div className="mt-1 flex items-center text-sm text-gray-400">
                             <MapPin className="h-4 w-4 mr-1" />
                             {report.location}
                           </div>
-                          <div className="mt-1 flex items-center text-sm text-gray-500">
+                          <div className="mt-1 flex items-center text-sm text-gray-400">
                             <Clock className="h-4 w-4 mr-1" />
                             {report.time}
                           </div>
                           <div className="mt-2 flex items-center justify-between">
-                            <span className="text-sm text-gray-500">
+                            <span className="text-sm text-gray-400">
                               by {report.author.name}
                             </span>
                             {report.images.length > 0 && (
@@ -501,7 +501,7 @@ const DashboardPage = () => {
                                     />
                                   ))}
                                 {report.images.length > 3 && (
-                                  <div className="h-8 w-8 rounded bg-gray-200 flex items-center justify-center text-xs text-gray-500">
+                                  <div className="h-8 w-8 rounded bg-gray-600 flex items-center justify-center text-xs text-gray-400">
                                     +{report.images.length - 3}
                                   </div>
                                 )}
@@ -514,13 +514,13 @@ const DashboardPage = () => {
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-gray-500">No recent reports found.</p>
+                    <p className="text-gray-400">No recent reports found.</p>
                   </div>
                 )}
                 <div className="mt-6">
                   <a
                     href="/reports"
-                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    className="text-primary-400 hover:text-primary-300 text-sm font-medium transition-colors duration-200"
                   >
                     View all reports →
                   </a>
@@ -532,9 +532,9 @@ const DashboardPage = () => {
           {/* Right Sidebar */}
           <div className="space-y-6">
             {/* Quick Actions */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">
+            <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700">
+              <div className="px-6 py-4 border-b border-gray-700">
+                <h3 className="text-lg font-semibold text-white">
                   Quick Actions
                 </h3>
               </div>
@@ -546,20 +546,18 @@ const DashboardPage = () => {
                       <button
                         key={action.title}
                         onClick={action.action}
-                        className="w-full flex items-center p-3 text-left rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                        className="w-full flex items-center p-3 text-left rounded-lg border border-gray-600 hover:border-primary-500 hover:bg-primary-500/10 transition-all duration-300"
                       >
-                        <div
-                          className={`p-2 rounded-lg bg-${action.color}-100 mr-3`}
-                        >
+                        <div className="p-2 rounded-lg bg-primary-500/20 border border-primary-500/30 mr-3">
                           <IconComponent
-                            className={`h-5 w-5 text-${action.color}-600`}
+                            className="h-5 w-5 text-primary-400"
                           />
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900">
+                          <p className="text-sm font-medium text-white">
                             {action.title}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-gray-400">
                             {action.description}
                           </p>
                         </div>
@@ -571,9 +569,9 @@ const DashboardPage = () => {
             </div>
 
             {/* Recent Activities */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">
+            <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700">
+              <div className="px-6 py-4 border-b border-gray-700">
+                <h3 className="text-lg font-semibold text-white">
                   Recent Activities
                 </h3>
               </div>
@@ -593,19 +591,19 @@ const DashboardPage = () => {
                               className="h-8 w-8 rounded-full"
                             />
                           ) : (
-                            <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                              <span className="text-xs text-gray-500">S</span>
+                            <div className="h-8 w-8 rounded-full bg-gray-600 flex items-center justify-center">
+                              <span className="text-xs text-gray-400">S</span>
                             </div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-900">
+                          <p className="text-sm text-white">
                             <span className="font-medium">
                               {activity.user.name}
                             </span>{" "}
                             {activity.content}
                           </p>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-gray-400 mt-1">
                             {activity.time}
                           </p>
                         </div>
@@ -614,16 +612,16 @@ const DashboardPage = () => {
                   </div>
                 ) : (
                   <div className="text-center py-4">
-                    <p className="text-gray-500">No recent activities.</p>
+                    <p className="text-gray-400">No recent activities.</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Upcoming Events */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">
+            <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700">
+              <div className="px-6 py-4 border-b border-gray-700">
+                <h3 className="text-lg font-semibold text-white">
                   Upcoming Events
                 </h3>
               </div>
@@ -631,24 +629,24 @@ const DashboardPage = () => {
                 {upcomingEvents.length > 0 ? (
                   <div className="space-y-4">
                     {upcomingEvents.map((event) => (
-                      <div key={event.id} className="p-4 bg-gray-50 rounded-lg">
+                      <div key={event.id} className="p-4 bg-gray-700 rounded-lg border border-gray-600 hover:border-primary-500/50 transition-all duration-300">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="text-sm font-medium text-gray-900">
+                          <h4 className="text-sm font-medium text-white">
                             {event.title}
                           </h4>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-400">
                             {formatDate(event.date)}
                           </span>
                         </div>
-                        <div className="flex items-center text-sm text-gray-500 mb-2">
+                        <div className="flex items-center text-sm text-gray-400 mb-2">
                           <MapPin className="h-4 w-4 mr-1" />
                           {event.location}
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-400">
                             {event.attendees} attending
                           </span>
-                          <button className="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                          <button className="text-xs text-primary-400 hover:text-primary-300 font-medium transition-colors duration-200">
                             {event.isRegistered ? "Registered" : "Register"}
                           </button>
                         </div>
@@ -657,13 +655,13 @@ const DashboardPage = () => {
                   </div>
                 ) : (
                   <div className="text-center py-4">
-                    <p className="text-gray-500">No upcoming events.</p>
+                    <p className="text-gray-400">No upcoming events.</p>
                   </div>
                 )}
                 <div className="mt-4">
                   <a
                     href="/community/events"
-                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    className="text-primary-400 hover:text-primary-300 text-sm font-medium transition-colors duration-200"
                   >
                     View all events →
                   </a>
