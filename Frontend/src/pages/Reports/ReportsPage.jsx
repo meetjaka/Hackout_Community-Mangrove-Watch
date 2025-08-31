@@ -128,12 +128,12 @@ const ReportsPage = () => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: { color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-      under_review: { color: 'bg-blue-100 text-blue-800', icon: Eye },
-      validated: { color: 'bg-green-100 text-green-800', icon: Shield },
-      rejected: { color: 'bg-red-100 text-red-800', icon: AlertTriangle },
-      escalated: { color: 'bg-purple-100 text-purple-800', icon: AlertTriangle },
-      resolved: { color: 'bg-gray-100 text-gray-800', icon: Shield }
+      pending: { color: 'bg-yellow-900/30 text-yellow-300 border border-yellow-700', icon: Clock },
+      under_review: { color: 'bg-blue-900/30 text-blue-300 border border-blue-700', icon: Eye },
+      validated: { color: 'bg-green-900/30 text-green-300 border border-green-700', icon: Shield },
+      rejected: { color: 'bg-red-900/30 text-red-300 border border-red-700', icon: AlertTriangle },
+      escalated: { color: 'bg-purple-900/30 text-purple-300 border border-purple-700', icon: AlertTriangle },
+      resolved: { color: 'bg-gray-700 text-gray-300 border border-gray-600', icon: Shield }
     };
 
     const config = statusConfig[status] || statusConfig.pending;
@@ -149,10 +149,10 @@ const ReportsPage = () => {
 
   const getSeverityBadge = (severity) => {
     const severityConfig = {
-      low: { color: 'bg-green-100 text-green-800' },
-      medium: { color: 'bg-yellow-100 text-yellow-800' },
-      high: { color: 'bg-orange-100 text-orange-800' },
-      critical: { color: 'bg-red-100 text-red-800' }
+      low: { color: 'bg-green-900/30 text-green-300 border border-green-700' },
+      medium: { color: 'bg-yellow-900/30 text-yellow-300 border border-yellow-700' },
+      high: { color: 'bg-orange-900/30 text-orange-300 border border-orange-700' },
+      critical: { color: 'bg-red-900/30 text-red-300 border border-red-700' }
     };
 
     const config = severityConfig[severity] || severityConfig.medium;
@@ -205,10 +205,10 @@ const ReportsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading reports...</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-500 mx-auto"></div>
+          <p className="mt-4 text-gray-300">Loading reports...</p>
         </div>
       </div>
     );
@@ -216,14 +216,14 @@ const ReportsPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Reports</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <h2 className="text-2xl font-bold text-white mb-2">Error Loading Reports</h2>
+          <p className="text-gray-300 mb-4">{error}</p>
           <button 
             onClick={() => window.location.reload()} 
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors duration-200"
           >
             Try Again
           </button>
@@ -233,18 +233,18 @@ const ReportsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Reports</h1>
-          <p className="mt-2 text-gray-600">
+          <h1 className="text-3xl font-bold text-white">Reports</h1>
+          <p className="mt-2 text-gray-300">
             Monitor and manage mangrove incident reports from the community
           </p>
         </div>
 
         {/* Filters and Search */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+        <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Search */}
             <div className="lg:col-span-2">
@@ -255,7 +255,7 @@ const ReportsPage = () => {
                   placeholder="Search reports..."
                   value={searchTerm}
                   onChange={handleSearchChange}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors duration-200"
                 />
               </div>
             </div>
@@ -266,7 +266,7 @@ const ReportsPage = () => {
                   name="category"
                   value={filters.category}
                   onChange={handleFilterChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors duration-200"
               >
                 <option value="">All Categories</option>
                 <option value="illegal_cutting">Illegal Cutting</option>
@@ -284,7 +284,7 @@ const ReportsPage = () => {
                   name="status"
                   value={filters.status}
                   onChange={handleFilterChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors duration-200"
               >
                 <option value="">All Status</option>
                 <option value="pending">Pending</option>
@@ -302,7 +302,7 @@ const ReportsPage = () => {
                   name="dateRange"
                   value={filters.dateRange}
                   onChange={handleFilterChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors duration-200"
               >
                 <option value="all">All Time</option>
                 <option value="today">Today</option>
@@ -315,18 +315,18 @@ const ReportsPage = () => {
         </div>
 
         {/* Reports Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
+        <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-700">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-white">
                 {pagination.totalReports} Reports Found
               </h2>
               <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-500">Sort by:</span>
+                <span className="text-sm text-gray-400">Sort by:</span>
                 <button
                   onClick={() => handleSortChange('createdAt')}
                   className={`text-sm font-medium ${
-                    sortBy === 'createdAt' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                    sortBy === 'createdAt' ? 'text-primary-400' : 'text-gray-400 hover:text-gray-300'
                   }`}
                 >
                   Date {sortBy === 'createdAt' && (sortOrder === 'asc' ? '↑' : '↓')}
@@ -334,7 +334,7 @@ const ReportsPage = () => {
                 <button
                   onClick={() => handleSortChange('severity')}
                   className={`text-sm font-medium ${
-                    sortBy === 'severity' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                    sortBy === 'severity' ? 'text-primary-400' : 'text-gray-400 hover:text-gray-300'
                   }`}
                 >
                   Severity {sortBy === 'severity' && (sortOrder === 'asc' ? '↑' : '↓')}
@@ -344,35 +344,35 @@ const ReportsPage = () => {
             </div>
 
             <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-700">
+              <thead className="bg-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Report
                     </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Category
                     </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Severity
                     </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Status
                     </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Location
                     </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Date
                     </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-gray-800 divide-y divide-gray-700">
                   {reports.map((report) => (
-                  <tr key={report._id} className="hover:bg-gray-50">
+                  <tr key={report._id} className="hover:bg-gray-700 transition-colors duration-200">
                       <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10">
@@ -389,10 +389,10 @@ const ReportsPage = () => {
                           )}
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-white">
                             {report.title}
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-gray-400">
                             by {report.reporter?.firstName} {report.reporter?.lastName}
                           </div>
                         </div>
@@ -401,7 +401,7 @@ const ReportsPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <span className="text-lg mr-2">{getCategoryIcon(report.category)}</span>
-                        <span className="text-sm text-gray-900">
+                        <span className="text-sm text-white">
                           {report.category.replace('_', ' ').charAt(0).toUpperCase() + report.category.replace('_', ' ').slice(1)}
                         </span>
                       </div>
@@ -413,16 +413,16 @@ const ReportsPage = () => {
                       {getStatusBadge(report.status)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-900">
+                      <div className="flex items-center text-sm text-white">
                         <MapPin className="w-4 h-4 mr-1 text-gray-400" />
                         {report.location.address?.city || 'Unknown'}, {report.location.address?.state || 'Unknown'}
                         </div>
                       </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
+                      <div className="text-sm text-white">
                         {formatDate(report.createdAt)}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-gray-400">
                         {formatTimeAgo(report.createdAt)}
                         </div>
                       </td>
@@ -430,7 +430,7 @@ const ReportsPage = () => {
                       <div className="flex items-center space-x-2">
                         <a
                           href={`/reports/${report._id}`}
-                          className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50"
+                          className="text-primary-400 hover:text-primary-300 p-1 rounded hover:bg-primary-500/10 transition-colors duration-200"
                           title="View Details"
                         >
                           <Eye className="w-4 h-4" />
@@ -439,14 +439,14 @@ const ReportsPage = () => {
                           <>
                             <a
                               href={`/reports/${report._id}/edit`}
-                              className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"
+                              className="text-green-400 hover:text-green-300 p-1 rounded hover:bg-green-500/10 transition-colors duration-200"
                               title="Edit Report"
                             >
                               <Edit className="w-4 h-4" />
                             </a>
                             <button
                               onClick={() => handleDeleteReport(report._id)}
-                              className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50"
+                              className="text-red-400 hover:text-red-300 p-1 rounded hover:bg-red-500/10 transition-colors duration-200"
                               title="Delete Report"
                             >
                               <Trash className="w-4 h-4" />
@@ -463,26 +463,26 @@ const ReportsPage = () => {
 
           {/* Pagination */}
           {pagination.totalPages > 1 && (
-            <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+            <div className="bg-gray-700 px-4 py-3 flex items-center justify-between border-t border-gray-600 sm:px-6">
               <div className="flex-1 flex justify-between sm:hidden">
                 <button
                   onClick={() => handlePageChange(pagination.currentPage - 1)}
                   disabled={!pagination.hasPrevPage}
-                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md text-gray-300 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => handlePageChange(pagination.currentPage + 1)}
                   disabled={!pagination.hasNextPage}
-                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md text-gray-300 bg-gray-800 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
                   Next
                 </button>
               </div>
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-gray-300">
                     Showing page <span className="font-medium">{pagination.currentPage}</span> of{' '}
                     <span className="font-medium">{pagination.totalPages}</span> pages
                   </p>
@@ -492,7 +492,7 @@ const ReportsPage = () => {
                     <button
                       onClick={() => handlePageChange(pagination.currentPage - 1)}
                       disabled={!pagination.hasPrevPage}
-                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-600 bg-gray-800 text-sm font-medium text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                     >
                       Previous
                     </button>
@@ -504,8 +504,8 @@ const ReportsPage = () => {
                           onClick={() => handlePageChange(page)}
                           className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                             page === pagination.currentPage
-                              ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                              : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                              ? 'z-10 bg-primary-500/20 border-primary-500 text-primary-400'
+                              : 'bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700'
                           }`}
                         >
                           {page}
@@ -515,7 +515,7 @@ const ReportsPage = () => {
                     <button
                       onClick={() => handlePageChange(pagination.currentPage + 1)}
                       disabled={!pagination.hasNextPage}
-                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-600 bg-gray-800 text-sm font-medium text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                     >
                       Next
                     </button>
@@ -530,15 +530,15 @@ const ReportsPage = () => {
         {reports.length === 0 && !loading && (
           <div className="text-center py-12">
             <div className="text-gray-400 text-6xl mb-4">📋</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No reports found</h3>
-            <p className="text-gray-500 mb-6">
+            <h3 className="text-lg font-medium text-white mb-2">No reports found</h3>
+            <p className="text-gray-400 mb-6">
               {searchTerm || Object.values(filters).some(f => f !== '' && f !== 'all')
                 ? 'Try adjusting your search or filters.'
                 : 'Get started by submitting your first report.'}
             </p>
             <a
               href="/reports/submit"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 transition-colors duration-200"
             >
               Submit Report
             </a>

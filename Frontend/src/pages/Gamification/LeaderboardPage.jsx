@@ -147,10 +147,10 @@ const LeaderboardPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading leaderboard...</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-500 mx-auto"></div>
+          <p className="mt-4 text-gray-300">Loading leaderboard...</p>
         </div>
       </div>
     );
@@ -158,14 +158,14 @@ const LeaderboardPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Leaderboard</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <h2 className="text-2xl font-bold text-white mb-2">Error Loading Leaderboard</h2>
+          <p className="text-gray-300 mb-4">{error}</p>
           <button 
             onClick={() => window.location.reload()} 
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors duration-200"
           >
             Try Again
           </button>
@@ -175,28 +175,28 @@ const LeaderboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
             <Trophy className="h-12 w-12 text-yellow-500 mr-3" />
-            <h1 className="text-4xl font-bold text-gray-900">Community Leaderboard</h1>
+            <h1 className="text-4xl font-bold text-white">Community Leaderboard</h1>
           </div>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
             Celebrate the top contributors and conservation champions in our mangrove watch community
             </p>
           </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+        <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6 mb-8">
           <div className="flex flex-wrap items-center justify-center gap-4">
             <div className="flex items-center space-x-2">
               <Clock className="h-5 w-5 text-gray-400" />
             <select
               value={timeFilter}
               onChange={(e) => setTimeFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors duration-200"
             >
               <option value="all">All Time</option>
                 <option value="7d">Last 7 Days</option>
@@ -210,7 +210,7 @@ const LeaderboardPage = () => {
             <select
               value={regionFilter}
               onChange={(e) => setRegionFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors duration-200"
             >
               <option value="all">All Regions</option>
               <option value="north">North Coast</option>
@@ -225,7 +225,7 @@ const LeaderboardPage = () => {
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors duration-200"
               >
                 <option value="all">All Categories</option>
                 <option value="reports">Reports</option>
@@ -237,7 +237,7 @@ const LeaderboardPage = () => {
         </div>
 
           <div className="mt-4 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-400">
               Showing {getTimeFilterLabel(timeFilter)} • {getRegionFilterLabel(regionFilter)}
             </p>
                 </div>
@@ -245,7 +245,7 @@ const LeaderboardPage = () => {
               
         {/* Current User Ranking */}
         {userRanking && (
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-lg p-6 mb-8 text-white">
+          <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl shadow-lg p-6 mb-8 text-white border border-primary-500/30">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="relative">
@@ -264,57 +264,57 @@ const LeaderboardPage = () => {
                   <h3 className="text-xl font-bold">
                     {userRanking.firstName} {userRanking.lastName}
                   </h3>
-                  <p className="text-blue-100">
+                  <p className="text-primary-100">
                     {getRoleIcon(userRanking.role)} {getRoleDisplayName(userRanking.role)}
                   </p>
                   <div className="flex items-center space-x-2 mt-1">
-                    <span className="text-sm text-blue-100">Rank #{userRanking.rank}</span>
-                    <span className="text-sm text-blue-100">•</span>
-                    <span className="text-sm text-blue-100">{userRanking.points} points</span>
-                    <span className="text-sm text-blue-100">•</span>
-                    <span className="text-sm text-blue-100">Level {userRanking.level}</span>
+                    <span className="text-sm text-primary-100">Rank #{userRanking.rank}</span>
+                    <span className="text-sm text-primary-100">•</span>
+                    <span className="text-sm text-primary-100">{userRanking.points} points</span>
+                    <span className="text-sm text-primary-100">•</span>
+                    <span className="text-sm text-primary-100">Level {userRanking.level}</span>
                   </div>
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-3xl font-bold">{userRanking.points}</div>
-                <div className="text-blue-100">Total Points</div>
+                <div className="text-primary-100">Total Points</div>
               </div>
             </div>
           </div>
         )}
 
         {/* Leaderboard */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Top Contributors</h2>
+        <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-700">
+            <h2 className="text-xl font-semibold text-white">Top Contributors</h2>
               </div>
               
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-gray-700">
             {leaderboardData.map((entry, index) => (
-              <div key={entry._id} className="p-6 hover:bg-gray-50 transition-colors">
+              <div key={entry._id} className="p-6 hover:bg-gray-700 transition-colors duration-200">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     {/* Rank */}
                     <div className="flex-shrink-0">
                       {index === 0 && (
-                        <div className="h-12 w-12 rounded-full bg-yellow-100 flex items-center justify-center">
-                          <Trophy className="h-6 w-6 text-yellow-600" />
+                        <div className="h-12 w-12 rounded-full bg-yellow-900/30 border border-yellow-700 flex items-center justify-center">
+                          <Trophy className="h-6 w-6 text-yellow-400" />
                         </div>
                       )}
                       {index === 1 && (
-                        <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
-                          <Award className="h-6 w-6 text-gray-600" />
+                        <div className="h-12 w-12 rounded-full bg-gray-700 border border-gray-600 flex items-center justify-center">
+                          <Award className="h-6 w-6 text-gray-400" />
                         </div>
                       )}
                       {index === 2 && (
-                        <div className="h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center">
-                          <Award className="h-6 w-6 text-orange-600" />
+                        <div className="h-12 w-12 rounded-full bg-orange-900/30 border border-orange-700 flex items-center justify-center">
+                          <Award className="h-6 w-6 text-orange-400" />
                         </div>
                       )}
                       {index > 2 && (
-                        <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                          <span className="text-lg font-bold text-blue-600">#{index + 1}</span>
+                        <div className="h-12 w-12 rounded-full bg-primary-500/20 border border-primary-500/30 flex items-center justify-center">
+                          <span className="text-lg font-bold text-primary-400">#{index + 1}</span>
                 </div>
                                 )}
                               </div>
@@ -327,18 +327,18 @@ const LeaderboardPage = () => {
                         className="h-12 w-12 rounded-full"
                       />
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-semibold text-white">
                           {entry.firstName} {entry.lastName}
                         </h3>
-                        <div className="flex items-center space-x-2 text-sm text-gray-500">
+                        <div className="flex items-center space-x-2 text-sm text-gray-400">
                           <span>{getRoleIcon(entry.role)} {getRoleDisplayName(entry.role)}</span>
                           <span>•</span>
                           <span>{entry.location?.address?.state || 'Unknown Region'}</span>
                             </div>
                         <div className="flex items-center space-x-2 mt-1">
-                          <span className="text-sm text-gray-500">Level {entry.level}</span>
-                          <span className="text-sm text-gray-500">•</span>
-                          <span className="text-sm text-gray-500">{entry.badges?.length || 0} badges</span>
+                          <span className="text-sm text-gray-400">Level {entry.level}</span>
+                          <span className="text-sm text-gray-400">•</span>
+                          <span className="text-sm text-gray-400">{entry.badges?.length || 0} badges</span>
                                 </div>
                                 </div>
                               </div>
@@ -346,27 +346,27 @@ const LeaderboardPage = () => {
 
                   {/* Points and Stats */}
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900">{entry.points}</div>
-                    <div className="text-sm text-gray-500">points</div>
+                    <div className="text-2xl font-bold text-white">{entry.points}</div>
+                    <div className="text-sm text-gray-400">points</div>
                   </div>
                 </div>
 
                 {/* Badges */}
                 {entry.badges && entry.badges.length > 0 && (
                   <div className="mt-4 flex items-center space-x-2">
-                    <span className="text-sm text-gray-500">Badges:</span>
+                    <span className="text-sm text-gray-400">Badges:</span>
                     {entry.badges.slice(0, 5).map((badge, badgeIndex) => (
                       <div
                         key={badgeIndex}
-                        className="flex items-center space-x-1 px-2 py-1 bg-gray-100 rounded-full text-xs"
+                        className="flex items-center space-x-1 px-2 py-1 bg-gray-700 border border-gray-600 rounded-full text-xs"
                         title={badge.name}
                       >
                         <span>{getBadgeIcon(badge.name)}</span>
-                        <span className="text-gray-700">{badge.name}</span>
+                        <span className="text-gray-300">{badge.name}</span>
                       </div>
                     ))}
                     {entry.badges.length > 5 && (
-                      <span className="text-xs text-gray-500">+{entry.badges.length - 5} more</span>
+                      <span className="text-xs text-gray-400">+{entry.badges.length - 5} more</span>
                     )}
                 </div>
               )}
@@ -376,10 +376,10 @@ const LeaderboardPage = () => {
           </div>
 
           {/* Achievements Section */}
-        <div className="mt-8 bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Your Achievements</h2>
-            <p className="text-sm text-gray-600 mt-1">Track your progress and unlock new badges</p>
+        <div className="mt-8 bg-gray-800 rounded-xl shadow-lg border border-gray-700">
+          <div className="px-6 py-4 border-b border-gray-700">
+            <h2 className="text-xl font-semibold text-white">Your Achievements</h2>
+            <p className="text-sm text-gray-400 mt-1">Track your progress and unlock new badges</p>
               </div>
               
           <div className="p-6">
@@ -390,32 +390,32 @@ const LeaderboardPage = () => {
                     key={achievement.id}
                     className={`p-4 rounded-lg border-2 ${
                       achievement.progress >= achievement.maxProgress
-                        ? 'border-green-200 bg-green-50'
-                        : 'border-gray-200 bg-gray-50'
+                        ? 'border-green-700 bg-green-900/20'
+                        : 'border-gray-600 bg-gray-700'
                     }`}
                   >
                     <div className="flex items-center space-x-3">
                       <div className={`p-2 rounded-full ${
                         achievement.progress >= achievement.maxProgress
-                          ? 'bg-green-100 text-green-600'
-                          : 'bg-gray-100 text-gray-600'
+                          ? 'bg-green-900/30 text-green-400 border border-green-700'
+                          : 'bg-gray-600 text-gray-400 border border-gray-500'
                       }`}>
                         <span className="text-2xl">{achievement.icon}</span>
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-medium text-gray-900">{achievement.name}</h3>
-                        <p className="text-sm text-gray-600">{achievement.description}</p>
+                        <h3 className="font-medium text-white">{achievement.name}</h3>
+                        <p className="text-sm text-gray-400">{achievement.description}</p>
                           <div className="mt-2">
-                          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                          <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
                             <span>Progress</span>
                             <span>{achievement.progress}/{achievement.maxProgress}</span>
                             </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="w-full bg-gray-600 rounded-full h-2">
                             <div
                               className={`h-2 rounded-full ${
                                 achievement.progress >= achievement.maxProgress
                                   ? 'bg-green-500'
-                                  : 'bg-blue-500'
+                                  : 'bg-primary-500'
                               }`}
                               style={{
                                 width: `${Math.min((achievement.progress / achievement.maxProgress) * 100, 100)}%`
@@ -424,7 +424,7 @@ const LeaderboardPage = () => {
                             </div>
                         </div>
                         {achievement.progress >= achievement.maxProgress && (
-                          <div className="mt-2 text-xs text-green-600 font-medium">
+                          <div className="mt-2 text-xs text-green-400 font-medium">
                             ✓ Completed! {achievement.reward}
                           </div>
                         )}
@@ -436,8 +436,8 @@ const LeaderboardPage = () => {
             ) : (
               <div className="text-center py-8">
                 <div className="text-gray-400 text-4xl mb-4">🎯</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No achievements yet</h3>
-                <p className="text-gray-500">
+                <h3 className="text-lg font-medium text-white mb-2">No achievements yet</h3>
+                <p className="text-gray-400">
                   Start contributing to unlock achievements and earn badges!
                 </p>
                 </div>
@@ -447,25 +447,25 @@ const LeaderboardPage = () => {
               
         {/* Community Stats */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-2">
+          <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6 text-center">
+            <div className="text-3xl font-bold text-primary-400 mb-2">
               {leaderboardData.length}
                       </div>
-            <div className="text-gray-600">Active Contributors</div>
+            <div className="text-gray-300">Active Contributors</div>
                     </div>
                     
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
-            <div className="text-3xl font-bold text-green-600 mb-2">
+          <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6 text-center">
+            <div className="text-3xl font-bold text-green-400 mb-2">
               {leaderboardData.reduce((total, entry) => total + entry.points, 0).toLocaleString()}
                       </div>
-            <div className="text-gray-600">Total Points Earned</div>
+            <div className="text-gray-300">Total Points Earned</div>
                     </div>
                     
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
-            <div className="text-3xl font-bold text-purple-600 mb-2">
+          <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6 text-center">
+            <div className="text-3xl font-bold text-purple-400 mb-2">
               {leaderboardData.reduce((total, entry) => total + (entry.badges?.length || 0), 0)}
                       </div>
-            <div className="text-gray-600">Badges Awarded</div>
+            <div className="text-gray-300">Badges Awarded</div>
           </div>
         </div>
       </div>
