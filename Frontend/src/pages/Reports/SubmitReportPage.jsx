@@ -148,7 +148,25 @@ const SubmitReportPage = () => {
         coordinates: [longitude, latitude], // MongoDB expects [longitude, latitude]
       };
       formData.append("location", JSON.stringify(locationData));
+      
+      // Add incident date (required field)
+      formData.append("incidentDate", new Date().toISOString());
+      
+      // Add tags if present
+      if (data.tags) {
+        const tagsArray = data.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+        formData.append("tags", JSON.stringify(tagsArray));
+      }
+      
+      // Add estimated area if present
+      if (data.estimatedArea?.value) {
+        formData.append("estimatedArea", JSON.stringify({
+          value: parseFloat(data.estimatedArea.value),
+          unit: data.estimatedArea.unit || "sq_meters"
+        }));
+      }
 
+      // Add media files
       photos.forEach((photo, index) => {
         formData.append("media", photo);
         if (data[`mediaCaption_${index}`]) {
@@ -164,7 +182,18 @@ const SubmitReportPage = () => {
         navigate("/reports");
     } catch (error) {
       console.error("Error submitting report:", error);
-      toast.error("Failed to submit report. Please try again.");
+      console.error("Error response:", error.response?.data);
+      console.error("Error status:", error.response?.status);
+      
+      const errorMessage = error.response?.data?.message || "Failed to submit report. Please try again.";
+      const validationErrors = error.response?.data?.errors;
+      
+      if (validationErrors) {
+        console.error("Validation errors:", validationErrors);
+        toast.error(`Validation failed: ${validationErrors.map(e => e.msg || e.message).join(', ')}`);
+      } else {
+        toast.error(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -217,8 +246,8 @@ const SubmitReportPage = () => {
                 <option value="illegal_cutting">Illegal Cutting</option>
                 <option value="land_reclamation">Land Reclamation</option>
                 <option value="pollution">Pollution</option>
+                <option value="dumping">Dumping</option>
                 <option value="construction">Construction</option>
-                <option value="natural_damage">Natural Damage</option>
                 <option value="other">Other</option>
               </select>
               {errors.category && (

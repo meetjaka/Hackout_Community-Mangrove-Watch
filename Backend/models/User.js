@@ -56,9 +56,6 @@ const userSchema = new mongoose.Schema({
     ],
     default: 'coastal_resident'
   },
-<<<<<<< HEAD
-
-=======
   // Additional role-specific information
   roleSpecificInfo: {
     // For fishermen
@@ -96,7 +93,6 @@ const userSchema = new mongoose.Schema({
     localArea: String,               
     yearsOfExperience: Number        
   },
->>>>>>> baa80a589b1a1645c35d5037d9382e7418b2bb9b
   permissions: [{
     type: String,
     enum: [

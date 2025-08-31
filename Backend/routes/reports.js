@@ -3,6 +3,7 @@ const { body, validationResult } = require("express-validator");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const { createReport } = require("../services/reportService");
 const Report = require("../models/Report");
 const User = require("../models/User");
 const { auth, authorize, hasPermission } = require("../middleware/auth");
@@ -52,348 +53,75 @@ const upload = multer({
 // @route   POST /api/reports
 // @desc    Create a new incident report
 // @access  Private
-router.post(
-  "/",
-  [
-    auth,
-    hasPermission("create_report"),
-    upload.array("media", 10), // Allow up to 10 files
-    body("title")
-      .trim()
-      .isLength({ min: 5, max: 200 })
-      .withMessage("Title must be between 5 and 200 characters"),
-    body("description")
-      .trim()
-      .isLength({ min: 20, max: 2000 })
-      .withMessage("Description must be between 20 and 2000 characters"),
-    body("category")
-      .isIn([
-        "illegal_cutting",
-        "land_reclamation",
-        "pollution",
-        "dumping",
-        "construction",
-        "other",
-      ])
-      .withMessage("Invalid category"),
-    body("severity")
-      .optional()
-      .isIn(["low", "medium", "high", "critical"])
-      .withMessage("Invalid severity level"),
-    body("location.coordinates")
-      .isArray({ min: 2, max: 2 })
-      .withMessage("Location coordinates are required"),
-    body("location.coordinates.*")
-      .isFloat()
-      .withMessage("Coordinates must be valid numbers"),
-    body("incidentDate").isISO8601().withMessage("Invalid incident date"),
-    body("estimatedArea.value")
-      .optional()
-      .isNumeric()
-      .withMessage("Estimated area must be a number"),
-    body("estimatedArea.unit")
-      .optional()
-      .isIn(["sq_meters", "sq_kilometers", "acres", "hectares"])
-      .withMessage("Invalid area unit"),
-    body("tags").optional().isArray().withMessage("Tags must be an array"),
-  ],
-  async (req, res) => {
-    try {
-      console.log("Received report data:", req.body);
-      console.log("Received files:", req.files);
-
-      // Parse location data if it's a string
-      let locationData;
-      try {
-        locationData =
-          typeof req.body.location === "string"
-            ? JSON.parse(req.body.location)
-            : req.body.location;
-      } catch (e) {
-        console.error("Error parsing location data:", e);
-        return res.status(400).json({
-          success: false,
-          message: "Invalid location data format",
-        });
-      }
-
-      // Validate location data
-      if (
-        !locationData ||
-        !locationData.coordinates ||
-        locationData.coordinates.length !== 2
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Location coordinates are required and must be [longitude, latitude]",
-        });
-      }
-
-      // Extract and validate required fields
-      const {
-        title,
-        description,
-        category,
-        subCategory,
-        severity = "medium",
-        incidentDate,
-        estimatedArea,
-        estimatedDamage,
-        environmentalImpact,
-        tags,
-        isUrgent = false,
-      } = req.body;
-
-      // Check for required fields
-      if (!title || !description || !category) {
-        return res.status(400).json({
-          success: false,
-          message: "Title, description, and category are required",
-        });
-      }
-
-      // Ensure we have the minimum required fields
-      if (!title || !description || !category) {
-        console.error("Missing required fields:", {
-          title,
-          description,
-          category,
-        });
-        return res.status(400).json({
-          success: false,
-          message: "Missing required fields: title, description, or category",
-        });
-      }
-
-      // Process uploaded files
-      const media = [];
-      if (req.files && req.files.length > 0) {
-        req.files.forEach((file, index) => {
-          const isVideo = /video/.test(file.mimetype);
-          if (isVideo) {
-            media.push({
-              type: "video",
-              url: `/uploads/reports/${file.filename}`,
-              caption: req.body[`mediaCaption_${index}`] || "",
-              duration: null, // Could be extracted with ffmpeg if needed
-            });
-          } else {
-            media.push({
-              type: "photo",
-              url: `/uploads/reports/${file.filename}`,
-              caption: req.body[`mediaCaption_${index}`] || "",
-              verified: false,
-            });
-          }
-        });
-      }
-
-      // Process location data
-      locationData = {
-        type: "Point",
-        coordinates: req.body["location[coordinates][]"] || [],
-        address: {
-          street: req.body["location[address][street]"] || "",
-          city: req.body["location[address][city]"] || "",
-          state: req.body["location[address][state]"] || "",
-          country: req.body["location[address][country]"] || "",
-          zipCode: req.body["location[address][zipCode]"] || "",
-        },
-        mangroveArea: req.body["location[mangroveArea]"] || "",
-        nearestLandmark: req.body["location[nearestLandmark]"] || "",
-      };
-
-      console.log("Processed location data:", locationData);
-
-      // Create new report
-      const report = new Report({
-        reporter: req.user.id,
-        title,
-        description,
-        category,
-        subCategory,
-        severity,
-        location: {
-          type: "Point",
-          coordinates: locationData.coordinates,
-          address: locationData.address || {},
-          mangroveArea: locationData.mangroveArea,
-          nearestLandmark: locationData.nearestLandmark,
-        },
-        incidentDate: new Date(incidentDate || new Date()),
-        estimatedArea,
-        estimatedDamage,
-        environmentalImpact,
-        tags: tags ? (Array.isArray(tags) ? tags : [tags]) : [],
-        isUrgent,
-        source: "web",
-      });
-
-      // Validate report before saving
-      const validationError = report.validateSync();
-      if (validationError) {
-        console.error("Report validation error:", validationError);
-        return res.status(400).json({
-          success: false,
-          message: "Invalid report data",
-          errors: Object.values(validationError.errors).map(
-            (error) => error.message
-          ),
-        });
-      }
-
-      // Add media files
-      if (media.length > 0) {
-        report.photos = media.filter((m) => m.type === "photo");
-        report.videos = media.filter((m) => m.type === "video");
-      }
-
-      // Calculate initial validation score
-      report.updateValidationScore();
-
-      try {
-        const savedReport = await report.save();
-        console.log("Report saved successfully:", savedReport._id);
-
-        // Populate reporter info
-        await savedReport.populate(
-          "reporter",
-          "firstName lastName email phone"
-        );
-
-        // Return success response with report data
-        return res.status(201).json({
-          success: true,
-          message: "Report submitted successfully",
-          data: {
-            reportId: savedReport._id,
-            title: savedReport.title,
-            status: savedReport.status,
-          },
-        });
-      } catch (error) {
-        console.error("Error saving report:", error);
-        return res.status(500).json({
-          success: false,
-          message: "Failed to save report",
-          error: error.message,
-        });
-      }
-
-      // Send confirmation email to reporter
-      try {
-        await sendEmail({
-          to: req.user.email,
-          template: "reportSubmitted",
-          data: {
-            firstName: req.user.firstName,
-            incidentTitle: title,
-            category,
-            location: `${location.address?.city || "Unknown"}, ${
-              location.address?.state || "Unknown"
-            }`,
-            status: report.status,
-            reportId: report._id,
-          },
-        });
-      } catch (emailError) {
-        console.error("Email sending failed:", emailError);
-      }
-
-      // Send confirmation SMS to reporter
-      try {
-        await sendSMS({
-          to: req.user.phone,
-          template: "reportSubmitted",
-          data: {
-            firstName: req.user.firstName,
-            incidentTitle: title,
-            category,
-            location: `${location.address?.city || "Unknown"}, ${
-              location.address?.state || "Unknown"
-            }`,
-            status: report.status,
-            reportId: report._id,
-          },
-        });
-      } catch (smsError) {
-        console.error("SMS sending failed:", smsError);
-      }
-
-      // If report is urgent, notify admins
-      if (isUrgent || severity === "critical") {
+router.post("/", [
+  auth,
+  hasPermission("create_report"),
+  upload.array("media", 10),
+  body("title")
+    .trim()
+    .isLength({ min: 5, max: 200 })
+    .withMessage("Title must be between 5 and 200 characters"),
+  body("description")
+    .trim()
+    .isLength({ min: 20, max: 2000 })
+    .withMessage("Description must be between 20 and 2000 characters"),
+  body("category")
+    .isIn([
+      "illegal_cutting",
+      "land_reclamation",
+      "pollution",
+      "dumping",
+      "construction",
+      "other"
+    ])
+    .withMessage("Invalid category"),
+  body("location")
+    .custom((value) => {
+      if (typeof value === "string") {
         try {
-          const admins = await User.find({
-            role: { $in: ["ngo_admin", "government_officer"] },
-            isActive: true,
-          }).select("firstName lastName email phone");
-
-          // Send urgent email alerts
-          for (const admin of admins) {
-            try {
-              await sendEmail({
-                to: admin.email,
-                template: "urgentReport",
-                data: {
-                  incidentTitle: title,
-                  category,
-                  severity,
-                  location: `${location.address?.city || "Unknown"}, ${
-                    location.address?.state || "Unknown"
-                  }`,
-                  reporterName: `${req.user.firstName} ${req.user.lastName}`,
-                  reportedAt: new Date().toLocaleString(),
-                },
-              });
-            } catch (emailError) {
-              console.error(
-                `Failed to send urgent email to ${admin.email}:`,
-                emailError
-              );
-            }
-          }
-
-          // Send urgent SMS alerts
-          const adminPhones = admins.map((admin) => ({
-            phone: admin.phone,
-            name: `${admin.firstName} ${admin.lastName}`,
-          }));
-
-          await sendSMS.sendUrgentAlerts(adminPhones, {
-            incidentTitle: title,
-            category,
-            location: `${location.address?.city || "Unknown"}, ${
-              location.address?.state || "Unknown"
-            }`,
-          });
-        } catch (notificationError) {
-          console.error(
-            "Failed to send urgent notifications:",
-            notificationError
-          );
+          value = JSON.parse(value);
+        } catch (e) {
+          throw new Error("Invalid location data format");
         }
       }
-
-      res.status(201).json({
-        success: true,
-        message: "Report submitted successfully",
-        data: {
-          report: await report.populate(
-            "reporter",
-            "firstName lastName avatar"
-          ),
-        },
-      });
-    } catch (error) {
-      console.error("Report creation error:", error);
-      res.status(500).json({
+      if (!value || !value.coordinates || !Array.isArray(value.coordinates) || value.coordinates.length !== 2) {
+        throw new Error("Location must include valid coordinates [longitude, latitude]");
+      }
+      return true;
+    })
+], async (req, res) => {
+  try {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
         success: false,
-        message: "Server error during report creation",
+        message: "Validation failed",
+        errors: errors.array()
       });
     }
+
+    // Create report using service
+    const report = await createReport(req.body, req.files, req.user);
+
+    // Return success response
+    return res.status(201).json({
+      success: true,
+      message: "Report submitted successfully",
+      data: {
+        reportId: report._id,
+        title: report.title,
+        status: report.status
+      }
+    });
+  } catch (error) {
+    console.error("Report submission error:", error);
+    return res.status(error.status || 500).json({
+      success: false,
+      message: error.message || "Server error during report creation"
+    });
   }
-);
+});
 
 // @route   GET /api/reports
 // @desc    Get all reports with filtering and pagination

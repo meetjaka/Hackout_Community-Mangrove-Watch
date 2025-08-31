@@ -1,34 +1,34 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Plus, 
-  Search, 
-  MapPin, 
-  Users, 
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  Plus,
+  Search,
+  MapPin,
+  Users,
   BookOpen,
   Heart,
   LogOut,
   Settings,
   Globe,
   Phone,
-  Mail
-} from 'lucide-react';
-import { communityAPI } from '../../services/api';
-import { toast } from 'react-hot-toast';
+  Mail,
+} from "lucide-react";
+import { communityAPI } from "../../services/api";
+import { toast } from "react-hot-toast";
 
 const CommunityManager = () => {
-  const [activeTab, setActiveTab] = useState('my-communities');
+  const [activeTab, setActiveTab] = useState("my-communities");
   const [myCommunities, setMyCommunities] = useState([]);
   const [discoverCommunities, setDiscoverCommunities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [locationFilter, setLocationFilter] = useState('');
-  const [focusAreaFilter, setFocusAreaFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [locationFilter, setLocationFilter] = useState("");
+  const [focusAreaFilter, setFocusAreaFilter] = useState("");
 
   const tabs = [
-    { id: 'my-communities', name: 'My Communities', icon: Users },
-    { id: 'discover', name: 'Discover Communities', icon: Globe },
-    { id: 'create', name: 'Create Community', icon: Plus }
+    { id: "my-communities", name: "My Communities", icon: Users },
+    { id: "discover", name: "Discover Communities", icon: Globe },
+    { id: "create", name: "Create Community", icon: Plus },
   ];
 
   const fetchMyCommunities = useCallback(async () => {
@@ -39,8 +39,8 @@ const CommunityManager = () => {
         setMyCommunities(response.data.data.communities || []);
       }
     } catch (error) {
-      console.error('Error fetching my communities:', error);
-      toast.error('Failed to fetch your communities');
+      console.error("Error fetching my communities:", error);
+      toast.error("Failed to fetch your communities");
     } finally {
       setLoading(false);
     }
@@ -59,17 +59,17 @@ const CommunityManager = () => {
         setDiscoverCommunities(response.data.data.communities || []);
       }
     } catch (error) {
-      console.error('Error discovering communities:', error);
-      toast.error('Failed to discover communities');
+      console.error("Error discovering communities:", error);
+      toast.error("Failed to discover communities");
     } finally {
       setLoading(false);
     }
   }, [searchQuery, locationFilter, focusAreaFilter]);
 
   useEffect(() => {
-    if (activeTab === 'my-communities') {
+    if (activeTab === "my-communities") {
       fetchMyCommunities();
-    } else if (activeTab === 'discover') {
+    } else if (activeTab === "discover") {
       fetchDiscoverCommunities();
     }
   }, [activeTab, fetchMyCommunities, fetchDiscoverCommunities]);
@@ -77,50 +77,64 @@ const CommunityManager = () => {
   const handleJoinCommunity = async (communityId) => {
     try {
       await communityAPI.joinCommunity(communityId);
-      toast.success('Successfully joined the community!');
+      toast.success("Successfully joined the community!");
       fetchMyCommunities();
       fetchDiscoverCommunities();
     } catch (error) {
-      console.error('Error joining community:', error);
-      toast.error('Failed to join community');
+      console.error("Error joining community:", error);
+      toast.error("Failed to join community");
     }
   };
 
   const handleLeaveCommunity = async (communityId) => {
-    if (!window.confirm('Are you sure you want to leave this community?')) {
+    if (!window.confirm("Are you sure you want to leave this community?")) {
       return;
     }
 
     try {
       await communityAPI.leaveCommunity(communityId);
-      toast.success('Successfully left the community');
+      toast.success("Successfully left the community");
       fetchMyCommunities();
       fetchDiscoverCommunities();
     } catch (error) {
-      console.error('Error leaving community:', error);
-      toast.error('Failed to leave community');
+      console.error("Error leaving community:", error);
+      toast.error("Failed to leave community");
     }
   };
 
   const handleCreateCommunity = async (formData) => {
     try {
-      await communityAPI.createCommunity(formData);
-      toast.success('Community created successfully!');
-      setShowCreateModal(false);
-      fetchMyCommunities();
+      const response = await communityAPI.createCommunity(formData);
+
+      if (response.data.success) {
+        toast.success("Community created successfully!");
+        setShowCreateModal(false);
+        fetchMyCommunities();
+      } else {
+        toast.error(response.data.message || "Failed to create community");
+      }
     } catch (error) {
-      console.error('Error creating community:', error);
-      toast.error('Failed to create community');
+      console.error("Error creating community:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to create community";
+      toast.error(errorMessage);
     }
   };
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'my-communities':
-        return <MyCommunitiesTab communities={myCommunities} onLeave={handleLeaveCommunity} />;
-      case 'discover':
+      case "my-communities":
         return (
-          <DiscoverCommunitiesTab 
+          <MyCommunitiesTab
+            communities={myCommunities}
+            onLeave={handleLeaveCommunity}
+          />
+        );
+      case "discover":
+        return (
+          <DiscoverCommunitiesTab
             communities={discoverCommunities}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
@@ -132,14 +146,14 @@ const CommunityManager = () => {
             onRefresh={fetchDiscoverCommunities}
           />
         );
-      case 'create':
+      case "create":
         return <CreateCommunityTab onCreate={handleCreateCommunity} />;
       default:
         return null;
     }
   };
 
-  if (loading && activeTab !== 'create') {
+  if (loading && activeTab !== "create") {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
@@ -170,8 +184,8 @@ const CommunityManager = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center ${
                   activeTab === tab.id
-                    ? 'border-green-500 text-green-600 dark:text-green-400'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                    ? "border-green-500 text-green-600 dark:text-green-400"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
                 }`}
               >
                 <Icon className="h-4 w-4 mr-2" />
@@ -192,9 +206,12 @@ const MyCommunitiesTab = ({ communities, onLeave }) => {
     return (
       <div className="text-center py-12">
         <Users className="mx-auto h-12 w-12 text-gray-400" />
-        <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No communities yet</h3>
+        <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+          No communities yet
+        </h3>
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          You haven't joined any communities yet. Discover and join communities to get started.
+          You haven't joined any communities yet. Discover and join communities
+          to get started.
         </p>
       </div>
     );
@@ -203,7 +220,10 @@ const MyCommunitiesTab = ({ communities, onLeave }) => {
   return (
     <div className="space-y-4">
       {communities.map((community) => (
-        <div key={community._id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div
+          key={community._id}
+          className="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
+        >
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
@@ -212,7 +232,7 @@ const MyCommunitiesTab = ({ communities, onLeave }) => {
               <p className="text-gray-600 dark:text-gray-400 mb-3">
                 {community.description}
               </p>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
                 <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
                   <Users className="h-4 w-4" />
@@ -220,7 +240,10 @@ const MyCommunitiesTab = ({ communities, onLeave }) => {
                 </div>
                 <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
                   <MapPin className="h-4 w-4" />
-                  <span>{community.location?.city || 'N/A'}, {community.location?.state || 'N/A'}</span>
+                  <span>
+                    {community.location?.city || "N/A"},{" "}
+                    {community.location?.state || "N/A"}
+                  </span>
                 </div>
                 <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
                   <BookOpen className="h-4 w-4" />
@@ -231,14 +254,17 @@ const MyCommunitiesTab = ({ communities, onLeave }) => {
               {community.focusAreas && community.focusAreas.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {community.focusAreas.map((area, index) => (
-                    <span key={index} className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
+                    <span
+                      key={index}
+                      className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded"
+                    >
                       {area}
                     </span>
                   ))}
                 </div>
               )}
             </div>
-            
+
             <button
               onClick={() => onLeave(community._id)}
               className="ml-4 px-3 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg flex items-center"
@@ -253,26 +279,26 @@ const MyCommunitiesTab = ({ communities, onLeave }) => {
   );
 };
 
-const DiscoverCommunitiesTab = ({ 
-  communities, 
-  searchQuery, 
-  setSearchQuery, 
-  locationFilter, 
-  setLocationFilter, 
-  focusAreaFilter, 
-  setFocusAreaFilter, 
-  onJoin, 
-  onRefresh 
+const DiscoverCommunitiesTab = ({
+  communities,
+  searchQuery,
+  setSearchQuery,
+  locationFilter,
+  setLocationFilter,
+  focusAreaFilter,
+  setFocusAreaFilter,
+  onJoin,
+  onRefresh,
 }) => {
   const focusAreas = [
-    'Mangrove Conservation',
-    'Community Engagement',
-    'Environmental Education',
-    'Research Collaboration',
-    'Policy Advocacy',
-    'Coastal Protection',
-    'Wildlife Conservation',
-    'Sustainable Development'
+    "Mangrove Conservation",
+    "Community Engagement",
+    "Environmental Education",
+    "Research Collaboration",
+    "Policy Advocacy",
+    "Coastal Protection",
+    "Wildlife Conservation",
+    "Sustainable Development",
   ];
 
   return (
@@ -294,7 +320,7 @@ const DiscoverCommunitiesTab = ({
               />
             </div>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Location
@@ -307,7 +333,7 @@ const DiscoverCommunitiesTab = ({
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
             />
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Focus Area
@@ -319,12 +345,14 @@ const DiscoverCommunitiesTab = ({
             >
               <option value="">All focus areas</option>
               {focusAreas.map((area) => (
-                <option key={area} value={area}>{area}</option>
+                <option key={area} value={area}>
+                  {area}
+                </option>
               ))}
             </select>
           </div>
         </div>
-        
+
         <div className="mt-4 flex justify-between items-center">
           <button
             onClick={onRefresh}
@@ -332,7 +360,7 @@ const DiscoverCommunitiesTab = ({
           >
             Refresh Results
           </button>
-          
+
           <div className="text-sm text-gray-600 dark:text-gray-400">
             {communities.length} communities found
           </div>
@@ -342,7 +370,9 @@ const DiscoverCommunitiesTab = ({
       {communities.length === 0 ? (
         <div className="text-center py-12">
           <Globe className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">No communities found</h3>
+          <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+            No communities found
+          </h3>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             Try adjusting your search criteria or create a new community.
           </p>
@@ -350,7 +380,10 @@ const DiscoverCommunitiesTab = ({
       ) : (
         <div className="space-y-4">
           {communities.map((community) => (
-            <div key={community._id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div
+              key={community._id}
+              className="bg-white dark:bg-gray-800 rounded-lg shadow p-6"
+            >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
@@ -359,7 +392,7 @@ const DiscoverCommunitiesTab = ({
                   <p className="text-gray-600 dark:text-gray-400 mb-3">
                     {community.description}
                   </p>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
                     <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
                       <Users className="h-4 w-4" />
@@ -367,7 +400,10 @@ const DiscoverCommunitiesTab = ({
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
                       <MapPin className="h-4 w-4" />
-                      <span>{community.location?.city || 'N/A'}, {community.location?.state || 'N/A'}</span>
+                      <span>
+                        {community.location?.city || "N/A"},{" "}
+                        {community.location?.state || "N/A"}
+                      </span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
                       <BookOpen className="h-4 w-4" />
@@ -378,14 +414,17 @@ const DiscoverCommunitiesTab = ({
                   {community.focusAreas && community.focusAreas.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {community.focusAreas.map((area, index) => (
-                        <span key={index} className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
+                        <span
+                          key={index}
+                          className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded"
+                        >
                           {area}
                         </span>
                       ))}
                     </div>
                   )}
                 </div>
-                
+
                 <button
                   onClick={() => onJoin(community._id)}
                   className="ml-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center"
@@ -404,75 +443,96 @@ const DiscoverCommunitiesTab = ({
 
 const CreateCommunityTab = ({ onCreate }) => {
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
+    name: "",
+    description: "",
     location: {
-      address: '',
-      city: '',
-      state: '',
-      country: 'India'
+      address: "",
+      city: "",
+      state: "",
+      country: "India",
     },
     focusAreas: [],
     contactInfo: {
-      email: '',
-      phone: '',
-      website: ''
-    }
+      email: "",
+      phone: "",
+      website: "",
+    },
   });
 
   const focusAreas = [
-    'Mangrove Conservation',
-    'Community Engagement',
-    'Environmental Education',
-    'Research Collaboration',
-    'Policy Advocacy',
-    'Coastal Protection',
-    'Wildlife Conservation',
-    'Sustainable Development'
+    "Mangrove Conservation",
+    "Community Engagement",
+    "Environmental Education",
+    "Research Collaboration",
+    "Policy Advocacy",
+    "Coastal Protection",
+    "Wildlife Conservation",
+    "Sustainable Development",
   ];
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setFormData(prev => ({
+    if (name.includes(".")) {
+      const [parent, child] = name.split(".");
+      setFormData((prev) => ({
         ...prev,
         [parent]: {
           ...prev[parent],
-          [child]: value
-        }
+          [child]: value,
+        },
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: value
+        [name]: value,
       }));
     }
   };
 
   const handleFocusAreaToggle = (area) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       focusAreas: prev.focusAreas.includes(area)
-        ? prev.focusAreas.filter(a => a !== area)
-        : [...prev.focusAreas, area]
+        ? prev.focusAreas.filter((a) => a !== area)
+        : [...prev.focusAreas, area],
     }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (formData.name.trim() && formData.description.trim()) {
-      onCreate(formData);
-      setFormData({
-        name: '',
-        description: '',
-        location: { address: '', city: '', state: '', country: 'India' },
-        focusAreas: [],
-        contactInfo: { email: '', phone: '', website: '' }
-      });
-    } else {
-      toast.error('Please fill in all required fields');
+
+    // Validate required fields
+    if (!formData.name.trim() || !formData.description.trim()) {
+      toast.error("Name and description are required");
+      return;
     }
+
+    // Create a properly formatted submission object
+    const submissionData = {
+      ...formData,
+      location: {
+        ...formData.location,
+        coordinates: formData.location?.coordinates || [0, 0],
+        address: {
+          street: formData.location?.address || "",
+          city: formData.location?.city || "",
+          state: formData.location?.state || "",
+          country: formData.location?.country || "India",
+        },
+      },
+      focusAreas: formData.focusAreas || [],
+      contactInfo: formData.contactInfo || {},
+    };
+
+    // Submit the data and reset form
+    onCreate(submissionData);
+    setFormData({
+      name: "",
+      description: "",
+      location: { address: "", city: "", state: "", country: "India" },
+      focusAreas: [],
+      contactInfo: { email: "", phone: "", website: "" },
+    });
   };
 
   return (
@@ -481,7 +541,7 @@ const CreateCommunityTab = ({ onCreate }) => {
         <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-6">
           Create New Community
         </h3>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -527,7 +587,7 @@ const CreateCommunityTab = ({ onCreate }) => {
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 State
@@ -556,7 +616,9 @@ const CreateCommunityTab = ({ onCreate }) => {
                     onChange={() => handleFocusAreaToggle(area)}
                     className="rounded border-gray-300 text-green-600 focus:ring-green-500"
                   />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">{area}</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {area}
+                  </span>
                 </label>
               ))}
             </div>
@@ -576,7 +638,7 @@ const CreateCommunityTab = ({ onCreate }) => {
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Website

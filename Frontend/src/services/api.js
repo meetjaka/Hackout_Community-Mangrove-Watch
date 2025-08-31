@@ -124,17 +124,7 @@ export const reportsAPI = {
   getAll: (params) => api.get("/reports", { params }),
   getById: (id) => api.get(`/reports/${id}`),
   create: (reportData) => {
-    const formData = new FormData();
-    Object.keys(reportData).forEach((key) => {
-      if (key === "media" && reportData[key]) {
-        reportData[key].forEach((file) => {
-          formData.append("media", file);
-        });
-      } else {
-        formData.append(key, reportData[key]);
-      }
-    });
-    return api.post("/reports", formData, {
+    return api.post("/reports", reportData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
   },
