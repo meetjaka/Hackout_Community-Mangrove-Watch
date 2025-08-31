@@ -1,0 +1,60 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer circle -->
+  <circle cx="60" cy="60" r="58" stroke="#059669" stroke-width="4" fill="#fefefe"/>
+  
+  <!-- Inner circle -->
+  <circle cx="60" cy="60" r="35" stroke="#059669" stroke-width="2" fill="none"/>
+  
+  <!-- Tree trunk -->
+  <path d="M60 45 L60 75" stroke="#059669" stroke-width="3" fill="none"/>
+  
+  <!-- Tree branches -->
+  <path d="M60 45 Q45 50 40 60" stroke="#059669" stroke-width="2" fill="none"/>
+  <path d="M60 45 Q75 50 80 60" stroke="#059669" stroke-width="2" fill="none"/>
+  <path d="M60 50 Q50 55 45 65" stroke="#059669" stroke-width="2" fill="none"/>
+  <path d="M60 50 Q70 55 75 65" stroke="#059669" stroke-width="2" fill="none"/>
+  
+  <!-- Tree leaves -->
+  <circle cx="40" cy="60" r="4" fill="#10b981"/>
+  <circle cx="80" cy="60" r="4" fill="#10b981"/>
+  <circle cx="45" cy="65" r="3" fill="#10b981"/>
+  <circle cx="75" cy="65" r="3" fill="#10b981"/>
+  <circle cx="60" cy="40" r="5" fill="#10b981"/>
+  
+  <!-- Roots -->
+  <path d="M60 75 Q50 80 45 85" stroke="#059669" stroke-width="2" fill="none"/>
+  <path d="M60 75 Q70 80 75 85" stroke="#059669" stroke-width="2" fill="none"/>
+  <path d="M60 75 Q55 82 50 88" stroke="#059669" stroke-width="2" fill="none"/>
+  <path d="M60 75 Q65 82 70 88" stroke="#059669" stroke-width="2" fill="none"/>
+  
+  <!-- Side leaf branches -->
+  <path d="M25 50 Q30 45 35 50" stroke="#059669" stroke-width="2" fill="none"/>
+  <path d="M30 45 L32 43" stroke="#059669" stroke-width="1" fill="none"/>
+  <path d="M30 45 L32 47" stroke="#059669" stroke-width="1" fill="none"/>
+  <path d="M30 45 L28 43" stroke="#059669" stroke-width="1" fill="none"/>
+  <path d="M30 45 L28 47" stroke="#059669" stroke-width="1" fill="none"/>
+  
+  <path d="M95 50 Q90 45 85 50" stroke="#059669" stroke-width="2" fill="none"/>
+  <path d="M90 45 L92 43" stroke="#059669" stroke-width="1" fill="none"/>
+  <path d="M90 45 L92 47" stroke="#059669" stroke-width="1" fill="none"/>
+  <path d="M90 45 L88 43" stroke="#059669" stroke-width="1" fill="none"/>
+  <path d="M90 45 L88 47" stroke="#059669" stroke-width="1" fill="none"/>
+  
+  <!-- Text paths for curved text -->
+  <defs>
+    <path id="topArc" d="M 20 60 A 40 40 0 0 1 100 60"/>
+    <path id="bottomArc" d="M 100 60 A 40 40 0 0 1 20 60"/>
+  </defs>
+  
+  <!-- Curved text -->
+  <text>
+    <textPath href="#topArc" startOffset="50%" text-anchor="middle" fill="#10b981" font-family="Arial, sans-serif" font-size="8" font-weight="bold">
+      MANGROVE
+    </textPath>
+  </text>
+  <text>
+    <textPath href="#bottomArc" startOffset="50%" text-anchor="middle" fill="#10b981" font-family="Arial, sans-serif" font-size="8" font-weight="bold">
+      CONNECT
+    </textPath>
+  </text>
+</svg>

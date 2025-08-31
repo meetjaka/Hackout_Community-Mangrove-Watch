@@ -102,12 +102,10 @@ const Layout = ({ children }) => {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <Link to="/" className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-mangrove-500 rounded-lg flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-white" />
-                </div>
+              <Link to="/" className="flex items-center space-x-3">
+                <img src="/logo.svg" alt="Mangrove Connect" className="w-10 h-10" />
                 <span className="text-xl font-bold text-gradient">
-                  Mangrove Watch
+                  Mangrove Connect
                 </span>
               </Link>
             </div>
@@ -227,7 +225,7 @@ const Layout = ({ children }) => {
                     Login
                   </Link>
                   <Link to="/register" className="btn-primary">
-                    Get Started
+                    Register
                   </Link>
                 </div>
               )}
@@ -267,12 +265,10 @@ const Layout = ({ children }) => {
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-mangrove-500 rounded-lg flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-white" />
-                </div>
+              <div className="flex items-center space-x-3 mb-4">
+                <img src="/logo.svg" alt="Mangrove Connect" className="w-8 h-8" />
                 <span className="text-xl font-bold text-gradient">
-                  Community Mangrove Watch
+                  Community Mangrove Connect
                 </span>
               </div>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
@@ -348,7 +344,7 @@ const Layout = ({ children }) => {
 
           <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
             <p className="text-center text-gray-500 dark:text-gray-400">
-              © 2024 Community Mangrove Watch. All rights reserved.
+              © 2024 Community Mangrove Connect. All rights reserved.
             </p>
           </div>
         </div>

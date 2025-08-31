@@ -41,7 +41,7 @@ export const ThemeProvider = ({ children }) => {
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       return 'dark';
     }
-    return 'light';
+    return 'dark'; // Default to dark mode
   });
 
   const [isDark, setIsDark] = useState(theme === 'dark');
